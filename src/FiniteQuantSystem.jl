@@ -1,8 +1,8 @@
 using QuantumOptics
 
-abstract type QuantmSystem end
+abstract type QuantumSystem end
 
-struct SpinQuantSystem <: QuantmSystem
+struct SpinQuantSystem <: QuantumSystem
     Hs::Operator
     Hc::Operator
     V::Operator
