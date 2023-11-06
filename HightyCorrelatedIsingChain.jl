@@ -76,11 +76,11 @@ for index in eachindex(GLOB_EIG_E)
     ρ_red = ptrace(dm(Ψ), [i for i=2:N])
     entan = real(entanglement_entropy(Ψ, [i for i=2:N]))
     plot(T, abs.(c1), label=("Energy: " * string(GLOB_EIG_E[index])), legend=:right)
-    plot!(T, abs.(c2), label=("Energy: " * string(entan)), legend=:right, figsize=(12, 8))
+    plot!(T, abs.(c2), label=("Entangement: " * string(entan)), legend=:right, figsize=(19.20, 15.80))
     xlabel!("t")
     ylabel!("|c1|^2, |c2|^2")
-    title!("Time evolution of the first two states of the system for Index: " * string(index))
-    savefig("data/Time evolution of the first two states of the system for Index: " * string(index) * ".png",)
+    title!("Time evolution of the states of the system for Index: " * string(index))
+    savefig("data/Time evolution of thestates of the system for Index: " * string(index) * ".png",)
 end
 
 
