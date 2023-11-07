@@ -72,17 +72,17 @@ p1 = histogram2d(
     var_c1, bins=(70, 70), 
     show_empty_bins=false, 
     color=:plasma, 
-    title="Variance of c1",
     xlabel="Energy",
-    ylabel="Variance of c1")
+    ylabel=L"\sigma^2_{c1}", 
+    fontsize=9)
 p2 = histogram2d(
     quant_system.GLOB_EIG_E,  
     var_c2, bins=(70, 70), 
     show_empty_bins=false, 
     color=:plasma, 
-    title="Variance of c2",
     xlabel="Energy",
-    ylabel="Variance of c2")
-l = @layout([a; b])
-plot(p1, p2, layout=l, title = "Coeff Variance VS Energy for N = $N and g = 1", size=(1200, 800))
+    ylabel=L"\sigma^2_{c2}", 
+    fontsize=9)
+l = @layout [ a b ]
+plot(p1, p2, layout=l, size=(700, 350), )
 savefig("data/Variance of abs(coeff) for N = $N and g = 1.png")
