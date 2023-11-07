@@ -83,5 +83,6 @@ p2 = histogram2d(
     title="Variance of c2",
     xlabel="Energy",
     ylabel="Variance of c2")
-plot(p1, p2, layout=(1, 2), title = "Coeff Variance VS Energy for N = $N and g = 1", size=(1900, 900))
+l = @layout([a; b])
+plot(p1, p2, layout=l, title = "Coeff Variance VS Energy for N = $N and g = 1", size=(1200, 800))
 savefig("data/Variance of abs(coeff) for N = $N and g = 1.png")
