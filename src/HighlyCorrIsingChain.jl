@@ -10,7 +10,7 @@ SIGZ = sigmaz(b)
 SIGX = sigmax(b)
 I = identityoperator(b)
 
-N = 4 # Number of spins
+N = 8 # Number of spins
 # Define the Hamiltonian
 
 function sig(oper::Operator, k::Int64, size::Int64)
@@ -83,5 +83,5 @@ p2 = histogram2d(
     title="Variance of c2",
     xlabel="Energy",
     ylabel="Variance of c2")
-plot(p1, p2, layout=(1, 2), title = "Coeff Variance VS Energy for N = $N and g = 1")
+plot(p1, p2, layout=(1, 2), title = "Coeff Variance VS Energy for N = $N and g = 1", size=(1900, 900))
 savefig("data/Variance of abs(coeff) for N = $N and g = 1.png")
