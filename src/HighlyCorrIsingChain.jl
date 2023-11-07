@@ -9,9 +9,10 @@ using LaTeXStrings
 b = SpinBasis(1 // 2)
 SIGZ = sigmaz(b)
 SIGX = sigmax(b)
+SIGY = sigmay(b)
 I = identityoperator(b)
 
-N = 8 # Number of spins
+N = 12 # Number of spins
 # Define the Hamiltonian
 
 function sig(oper::Operator, k::Int64, size::Int64)
@@ -19,15 +20,28 @@ function sig(oper::Operator, k::Int64, size::Int64)
     list_[k] = oper
     return tensor(list_...)
 end
-Hs = SIGZ
-Hc = sum([sig(SIGZ, i, N - 1) for i in 1:N-1])
+
+## --- Hamiltonian for pure spin-spin interaction with external field --- ##
+#= Hs = 0.0*SIGZ
+Hc = 0.0*sum([sig(SIGZ, i, N - 1) for i in 1:N-1])
 
 for i in 1:N-1
     for j in i+1:N-1
         global Hc += sig(SIGX, i, N - 1) * sig(SIGX, j, N - 1)
     end
 end
-V = sig(SIGX, 1, N) * sum([sig(SIGX, i, N) for i in 2:N])
+V = sig(SIGX, 1, N) * sum([sig(SIGX, i, N) for i in 2:N]) =#
+
+## --- Hamiltonian for  spin-spin interaction along x-axis with external field --- ##
+Hs = 0.0*SIGZ
+Hc = 0.0*sig(SIGZ, 1, N - 1)
+
+for i in 1:N-1
+    for j in i+1:N-1
+        global Hc += sig(SIGX, i, N - 1) * sig(SIGX, j, N - 1) + sig(SIGY, i, N - 1) * sig(SIGY, j, N - 1) + sig(SIGZ, i, N - 1) * sig(SIGZ, j, N - 1)
+    end
+end
+V =  sum([sig(SIGX, 1, N) * sig(SIGX, i, N) + sig(SIGY, 1, N)* sig(SIGY, i, N) + sig(SIGZ, 1, N)*sig(SIGZ, i, N) for i in 2:N])
 
 HC_EIG_E_loc, HC_EIG_V_loc = eigenstates(dense(Hc))
 function χ(t::Float64, E::Float64)
@@ -47,28 +61,23 @@ for index in eachindex(quant_system.GLOB_EIG_E)
     @threads for i in eachindex(T)
         t = T[i]
         ϕ = φ_λ(t, quant_system)
-        if norm(ϕ) < 1e-10
-            c1[i] = ϕ.data[1]
-            c2[i] = ϕ.data[2]
-        else
-            ϕ = ϕ / norm(ϕ)
-            c1[i] = ϕ.data[1]
-            c2[i] = ϕ.data[2]
-        end
+        ϕ = ϕ / norm(ϕ)
+        c1[i] = ϕ.data[1]
+        c2[i] = ϕ.data[2]
     end
-    c1 = abs.(c1)
-    c2 = abs.(c2)
-    var_c1[index] = var(c1)
-    var_c2[index] = var(c2)
-    #entan = real(entanglement_entropy(quant_system.Ψ, [i for i=2:N]))/log(2)
-    #plot(T, abs.(c1), label=("Energy: " * string(quant_system.EΨ)), legend=:right)
-    #plot!(T, abs.(c2), label=("Entangement: " * string(entan)), legend=:right, figsize=(19.20, 15.80))
-    #xlabel!("t")
-    #ylabel!("|c1|^2, |c2|^2")
-    #title!("Time evolution of the states of the system for Index: " * string(index))
-    #savefig("data/Time evolution of thestates of the system for Index: " * string(index) * ".png",)
+    #c1 = abs.(c1)
+    #c2 = abs.(c2)
+    #var_c1[index] = var(c1)
+    #var_c2[index] = var(c2)
+    entan = real(entanglement_entropy(quant_system.Ψ, [i for i=2:N]))/log(2)
+    plot(T, abs.(c1), label=("Energy: " * string(quant_system.EΨ)), legend=:right)
+    plot!(T, abs.(c2), label=("Entangement: " * string(entan)), legend=:right, figsize=(19.20, 15.80))
+    xlabel!("t")
+    ylabel!(L"|c_1|^2, |c_2|^2")
+    title!("Time evolution of the states of the system for Index: " * string(index))
+    savefig("data/Time evolution of the states of the system for Pure spin-spin interaction and Index: " * string(index) * ".png",)
 end
-p1 = histogram2d(
+#= p1 = histogram2d(
     quant_system.GLOB_EIG_E,  
     var_c1, bins=(70, 70), 
     show_empty_bins=false, 
@@ -86,4 +95,4 @@ p2 = histogram2d(
     fontsize=9)
 l = @layout [ a b ]
 plot(p1, p2, layout=l, size=(700, 350))
-savefig("data/Variance of abs(coeff) for N = $N and g = 1.png")
+savefig("data/Variance of abs(coeff) for N = $N and g = 1.png") =#
