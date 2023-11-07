@@ -9,12 +9,12 @@ mutable struct SpinQuantSystem <: QuantumSystem
     V::Operator
     clock_func::Function
     index::Int64
-    HC_EIG_E
-    HC_EIG_V
-    GLOB_EIG_E
-    GLOB_EIG_V
-    PSI_EIG_E
-    PSI_EIG_V
+    HC_EIG_E::Vector{Float64}
+    HC_EIG_V::Vector{Ket}
+    GLOB_EIG_E::Vector{Float64}
+    GLOB_EIG_V::Vector{Ket}
+    PSI_EIG_E::Vector{Float64}
+    PSI_EIG_V::Vector{Ket}
     Ψ::Ket
     EΨ::Float64
     function SpinQuantSystem(Hs::Operator, Hc::Operator, V::Operator, clock_func::Function)

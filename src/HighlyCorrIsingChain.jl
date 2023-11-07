@@ -4,6 +4,7 @@ using QuantumOptics
 using Plots
 using Base.Threads
 using Statistics
+using LaTeXStrings
 
 b = SpinBasis(1 // 2)
 SIGZ = sigmaz(b)
@@ -84,5 +85,5 @@ p2 = histogram2d(
     ylabel=L"\sigma^2_{c2}", 
     fontsize=9)
 l = @layout [ a b ]
-plot(p1, p2, layout=l, size=(700, 350), )
+plot(p1, p2, layout=l, size=(700, 350))
 savefig("data/Variance of abs(coeff) for N = $N and g = 1.png")
