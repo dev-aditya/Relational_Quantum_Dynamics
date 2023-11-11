@@ -7,7 +7,7 @@ using Statistics
 using LaTeXStrings
 using DelimitedFiles
 
-include("powerLawCoupling.jl")
+include("hamiltonian/powerLawCoupling.jl")
 
 HC_EIG_E_loc, HC_EIG_V_loc = eigenstates(dense(Hc));
 function χ(t::Float64, E::Float64)
