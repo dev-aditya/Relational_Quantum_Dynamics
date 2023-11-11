@@ -3,7 +3,6 @@ export SpinQuantSystem, calculate_eigenstates, UpdateIndex, φ_λ
 using QuantumOptics
 abstract type QuantumSystem end
 mutable struct SpinQuantSystem <: QuantumSystem
-    println("Initializing SpinQuantSystem")
     Hs::Operator
     Hc::Operator
     V::Operator
@@ -18,6 +17,7 @@ mutable struct SpinQuantSystem <: QuantumSystem
     Ψ::Ket
     EΨ::Float64
     function SpinQuantSystem(Hs::Operator, Hc::Operator, V::Operator, clock_func::Function)
+        println("Initializing SpinQuantSystem")
         system = new()
         system.Hs = Hs
         system.Hc = Hc
