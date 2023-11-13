@@ -17,7 +17,7 @@ mpl.style.use("seaborn") =#
 1. Import the required Hamiltonians 
 2. Don't forgert to update the titles and labels of the plots. 
 =#
-include("hamiltonian/powerLawCoupling.jl")
+include("hamiltonian/highlyCoupled_spinx_spinx.jl")
 
 HC_EIG_E_loc, HC_EIG_V_loc = eigenstates(dense(Hc));
 function χ(t::Float64, E::Float64)
@@ -37,7 +37,7 @@ for E in energy_levels
     end
 end
 
-outfile = "data/energy_degeneracy_$N-powerLawCoupling_$l.txt"
+outfile = "data/energy_degeneracy_$N-sigx_sigx_coupling.txt"
 writedlm(outfile, degeneracy, '\t')
 
 T = Base._linspace(0.0, 2 * π, 1000);
@@ -55,8 +55,8 @@ for index in eachindex(quant_system.GLOB_EIG_E)
         c2[i] = ϕ.data[2]
     end
     ene = quant_system.EΨ
-    c1_var = abs2.(c1) .- mean(abs2.(c1))
-    c2_var = abs2.(c2) .- mean(abs2.(c2))
+    c1_var = (abs2.(c1) .- mean(abs2.(c1)))
+    c2_var = (abs2.(c2) .- mean(abs2.(c2)))
     Y1 = fft(c1_var) |> fftshift
     entan = real(entanglement_entropy(quant_system.Ψ, [i for i = 2:N])) / log(2)
     fig, axs = subplots(2, 2, figsize=(45, 27),)
@@ -71,28 +71,30 @@ for index in eachindex(quant_system.GLOB_EIG_E)
     axs[1, 1].legend(fontsize=25)
     ##======##======
     fft_c1 = fft(abs2.(c1)) |> fftshift
-    axs[1, 2].plot(freqs, log.(abs.(fft_c1)), linestyle="-.", linewidth=1.2)
-    axs[1, 2].set_title(L"log(|FFT(|c_1|^2)|)", fontsize=25)
+    axs[1, 2].plot(freqs, log.(abs.(fft_c1)), linewidth=1.2)
+    axs[1, 2].set_title(L"log|FFT(|c_1|^2)|", fontsize=25)
     axs[1, 2].set_xlabel("Freq(Hz)", fontsize=25)
-    axs[1, 2].set_ylabel(L"log(|FFT(|c_1|^2)|)", fontsize=25)
+    axs[1, 2].set_ylabel(L"log|FFT(|c_1|^2)|", fontsize=25)
+    axs[1, 2].set_xlim(-0.002, 0.002)
     axs[1, 2].tick_params(axis="x", labelsize=18)  # Increase x-ticks font size
     axs[1, 2].tick_params(axis="y", labelsize=18)  # Increase y-ticks font size
     ##======##======
-    axs[2, 1].plot(T, c1_var, linestyle="-.", linewidth=1.2)
-    axs[2, 1].set_title(L"|c_1|^2 - \overline{|c_1|^2}", fontsize=25)
+    axs[2, 1].plot(T, c1_var, linewidth=1.2)
+    axs[2, 1].set_title(L"var(|c_1|^2) = (|c_1|^2 - \overline{|c_1|^2})", fontsize=25)
     axs[2, 1].set_xlabel("T", fontsize=25)
     axs[2, 1].set_ylabel(L"var(|c_1|^2)", fontsize=25)
     axs[2, 1].tick_params(axis="x", labelsize=14)  # Increase x-ticks font size
     axs[2, 1].tick_params(axis="y", labelsize=14)  # Increase y-ticks font size
     ##======##======
-    axs[2, 2].plot(freqs, log.(abs.(Y1)), linestyle="-.", linewidth=1.2)
-    axs[2, 2].set_title(L"log(|FFT(var(|c_1|^2))|)", fontsize=25)
+    axs[2, 2].plot(freqs, log.(abs.(Y1)), linewidth=1.2)
+    axs[2, 2].set_title(L"log|FFT(var(|c_1|^2))|", fontsize=25)
     axs[2, 2].set_xlabel("Freq(Hz)", fontsize=25)
-    axs[2, 2].set_ylabel(L"log(|FFT(var(|c_1|^2))|)", fontsize=25)
+    axs[2, 2].set_ylabel(L"log|FFT(var(|c_1|^2)))|", fontsize=25)
+    axs[1, 2].set_xlim(-0.002, 0.002)
     axs[2, 2].tick_params(axis="x", labelsize=18)  # Increase x-ticks font size
     axs[2, 2].tick_params(axis="y", labelsize=18)  # Increase y-ticks font size
 
-    fig.suptitle("PowerLaw Coupling \n Energy: $(ene); Entanglement: $(entan); gamma = $γ", fontsize=30)
-    PyPlot.savefig("data/index_$index-powerLaw.png",)
+    fig.suptitle("Sigx-Sigx Coupling with $N spins\n Energy: $(ene); Entanglement: $(entan)", fontsize=30)
+    PyPlot.savefig("data/index_$index-sigx-sigx.svg",)
     PyPlot.close()
 end
