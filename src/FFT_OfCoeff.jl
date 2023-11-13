@@ -2,22 +2,18 @@ include("FiniteQuantSystem.jl")
 using .FiniteQuantSystem
 using QuantumOptics
 using PyPlot
-using PyPlot
 PyPlot.rc("axes", grid=true)
 using LaTeXStrings
 using Base.Threads
 using Statistics
 using DelimitedFiles
 using FFTW # for fft
-#= using PyCall
-mpl = pyimport("matplotlib.pyplot")
-mpl.style.use("seaborn") =#
 
 #= 
 1. Import the required Hamiltonians 
 2. Don't forgert to update the titles and labels of the plots. 
 =#
-include("hamiltonian/highlyCoupled_spinx_spinx.jl")
+include("hamiltonian/highlyCoupled_spinAlongAllAxis.jl")
 
 HC_EIG_E_loc, HC_EIG_V_loc = eigenstates(dense(Hc));
 function χ(t::Float64, E::Float64)
@@ -37,11 +33,17 @@ for E in energy_levels
     end
 end
 
-outfile = "data/energy_degeneracy_$N-sigx_sigx_coupling.txt"
+outfile = "data/energy_degeneracy_$N.txt"
 writedlm(outfile, degeneracy, '\t')
 
-T = Base._linspace(0.0, 2 * π, 1000);
-freqs = fftfreq(length(T), T[2] - T[1]) |> fftshift;
+N = 2^10 - 1
+t0 = 0
+tmax = 2pi
+Ts = tmax / N
+# time coordinate
+T = t0:Ts:tmax
+
+freqs = fftfreq(length(T), 1.0/Ts) |> fftshift; ## Equivalent to fftshift(fftfreq(N, 1.0/Ts))
 for index in eachindex(quant_system.GLOB_EIG_E)
     UpdateIndex(quant_system, index)
     global c1 = Vector{ComplexF64}(undef, length(T))
@@ -70,12 +72,13 @@ for index in eachindex(quant_system.GLOB_EIG_E)
     axs[1, 1].tick_params(axis="y", labelsize=18)  # Increase y-ticks font size
     axs[1, 1].legend(fontsize=25)
     ##======##======
-    fft_c1 = fft(abs2.(c1)) |> fftshift
-    axs[1, 2].plot(freqs, log.(abs.(fft_c1)), linewidth=1.2)
+    fft_c1 = fft(abs2.(c1)) |> fftshift;
+    axs[1, 2].semilogy(freqs, abs.(fft_c1), linewidth=1.2)
+    #axs[1, 2].plot(freqs, log.(abs.(fft_c1)), linewidth=1.2)
     axs[1, 2].set_title(L"log|FFT(|c_1|^2)|", fontsize=25)
     axs[1, 2].set_xlabel("Freq(Hz)", fontsize=25)
     axs[1, 2].set_ylabel(L"log|FFT(|c_1|^2)|", fontsize=25)
-    axs[1, 2].set_xlim(-0.002, 0.002)
+    #axs[1, 2].set_xlim(-0.002, 0.002)
     axs[1, 2].tick_params(axis="x", labelsize=18)  # Increase x-ticks font size
     axs[1, 2].tick_params(axis="y", labelsize=18)  # Increase y-ticks font size
     ##======##======
@@ -86,15 +89,16 @@ for index in eachindex(quant_system.GLOB_EIG_E)
     axs[2, 1].tick_params(axis="x", labelsize=14)  # Increase x-ticks font size
     axs[2, 1].tick_params(axis="y", labelsize=14)  # Increase y-ticks font size
     ##======##======
-    axs[2, 2].plot(freqs, log.(abs.(Y1)), linewidth=1.2)
+    axs[2, 2].semilogy(freqs, abs.(Y1), linewidth=1.2)
+    #axs[2, 2].plot(freqs, log.(abs.(Y1)), linewidth=1.2)
     axs[2, 2].set_title(L"log|FFT(var(|c_1|^2))|", fontsize=25)
     axs[2, 2].set_xlabel("Freq(Hz)", fontsize=25)
     axs[2, 2].set_ylabel(L"log|FFT(var(|c_1|^2)))|", fontsize=25)
-    axs[1, 2].set_xlim(-0.002, 0.002)
+    #axs[1, 2].set_xlim(-0.002, 0.002)
     axs[2, 2].tick_params(axis="x", labelsize=18)  # Increase x-ticks font size
     axs[2, 2].tick_params(axis="y", labelsize=18)  # Increase y-ticks font size
 
-    fig.suptitle("Sigx-Sigx Coupling with $N spins\n Energy: $(ene); Entanglement: $(entan)", fontsize=30)
-    PyPlot.savefig("data/index_$index-sigx-sigx.svg",)
+    fig.suptitle("No Ext Field with all spins coupled; $N spins\n Energy: $(ene); Entanglement: $(entan)", fontsize=30)
+    PyPlot.savefig("data/index_$index.svg",)
     PyPlot.close()
 end
