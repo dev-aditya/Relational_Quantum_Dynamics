@@ -1,7 +1,8 @@
 using QuantumOptics
 using PyPlot
+PyPlot.rc("axes", grid=true)
 
-include("hamiltonian/powerLawCoupling.jl")
+include("hamiltonian/highlyCoupled_spinx_spinx.jl")
 H = identityoperator(Hs) ⊗ Hc + Hs ⊗ identityoperator(Hc) + V
 GLOB_EIG_E, GLOB_EIG_V = eigenstates(dense(H))
 function Entropy(Ψ::Ket)
@@ -19,5 +20,6 @@ colorbar(orientation="horizontal")
 # Set labels and title
 xlabel("Energy")
 ylabel("Entropy")
-title("Entropy Energy for N = $N; gamma = $γ")
-PyPlot.savefig("data/EntropyEnergy_powerLawCoupling_$N-spins.png")
+grid(true)
+title("Entropy Energy for N = $N;")
+PyPlot.savefig("data/EntropyEnergy_$N-spins.png")

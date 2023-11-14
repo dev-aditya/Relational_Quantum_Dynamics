@@ -3,7 +3,7 @@ using PyPlot
 using Statistics
 PyPlot.rc("axes", grid=true)
 
-include("hamiltonian/highlyCoupled_spinAlongAllAxis.jl")
+include("hamiltonian/highlyCoupled_spinx_spinx.jl")
 
 HC_EIG_E_loc, HC_EIG_V_loc = eigenstates(dense(Hc));
 function χ(t::Float64, E::Float64)
@@ -24,8 +24,8 @@ c1_var = Vector{Float64}(undef, length(quant_system.GLOB_EIG_E))
 c2_var = Vector{Float64}(undef, length(quant_system.GLOB_EIG_E))
 for index in eachindex(quant_system.GLOB_EIG_E)
     UpdateIndex(quant_system, index)
-    global c1 = Vector{ComplexF64}(undef, length(T))
-    global c2 = Vector{ComplexF64}(undef, length(T))
+    local c1 = Vector{ComplexF64}(undef, length(T))
+    local c2 = Vector{ComplexF64}(undef, length(T))
 
     @threads for i in eachindex(T)
         t = T[i]
