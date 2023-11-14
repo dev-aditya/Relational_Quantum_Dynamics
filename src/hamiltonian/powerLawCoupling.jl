@@ -24,7 +24,6 @@ Hc = 1.0*sum([sig(SIGZ, i, N - 1) for i in 1:N-1]);
 for i in 1:N-1
     for j in i+1:N-1
         distance = min(abs(i - j), N - abs(i - j))
-        print(i, " ", j, "; D ", distance, "\n")
         global Hc += 1/abs(l*distance)^γ * sig(SIGX, i, N - 1) * sig(SIGX, j, N - 1);
     end
 end
