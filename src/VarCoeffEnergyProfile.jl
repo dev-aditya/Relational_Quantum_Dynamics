@@ -1,9 +1,13 @@
+include("FiniteQuantSystem.jl")
+using .FiniteQuantSystem
 using QuantumOptics
 using PyPlot
 using Statistics
+using FFTW # for fft
+using Base.Threads
 PyPlot.rc("axes", grid=true)
 
-include("hamiltonian/highlyCoupled_spinx_spinx.jl")
+include("hamiltonian/powerLawCoupling.jl")
 
 HC_EIG_E_loc, HC_EIG_V_loc = eigenstates(dense(Hc));
 function χ(t::Float64, E::Float64)
@@ -12,7 +16,7 @@ end
 
 quant_system = SpinQuantSystem(Hs, Hc, V, χ);
 
-N_samp = 2^10 - 1
+N_samp = 2^12 - 1
 t0 = 0
 tmax = 2π
 Ts = tmax / N_samp
@@ -42,6 +46,6 @@ figure(figsize=(6, 8))
 hist2D(quant_system.GLOB_EIG_E, c1_var, bins=(80, 80), cmap="plasma", cmin=1)
 xlabel("Energy")
 ylabel(L"$\sigma^2_{|c_1|^2}$")
-title("Variance of the coefficient")
+title("Variance of the coefficient for N = $N spins")
 colorbar(orientation="horizontal") 
-PyPlot.savefig("data/VarianceCoeff_$N-spins.png")
+PyPlot.savefig("data/VarianceCoeff_$N-spins.svg")
