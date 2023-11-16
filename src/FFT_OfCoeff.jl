@@ -13,7 +13,7 @@ using Peaks
 1. Import the required Hamiltonians 
 2. Don't forgert to update the titles and labels of the plots. 
 =#
-include("hamiltonian/highlyCoupled_spinx_spinx.jl")
+include("hamiltonian/powerLawCoupling.jl")
 
 HC_EIG_E_loc, HC_EIG_V_loc = eigenstates(dense(Hc));
 function χ(t::Float64, E::Float64)
@@ -36,14 +36,14 @@ end
 outfile = "data/energy_degeneracy_$N.txt"
 writedlm(outfile, degeneracy, '\t')
 
-N_samp = 2^12 - 1
+N_samp = 2^10 - 1
 t0 = 0
 tmax = 2pi
 Ts = tmax / N_samp
 # time coordinate
 T = t0:Ts:tmax
 
-freqs = fftfreq(length(T), 1.0/Ts) |> fftshift; ## Equivalent to fftshift(fftfreq(N, 1.0/Ts))
+freqs = fftfreq(length(T), 1.0 / Ts) |> fftshift; ## Equivalent to fftshift(fftfreq(N, 1.0/Ts))
 for index in eachindex(quant_system.GLOB_EIG_E)
     UpdateIndex(quant_system, index)
     local c1 = Vector{ComplexF64}(undef, length(T))
@@ -72,22 +72,21 @@ for index in eachindex(quant_system.GLOB_EIG_E)
     axs[1, 1].tick_params(axis="y", labelsize=18)  # Increase y-ticks font size
     axs[1, 1].legend(fontsize=25)
     ##======##======
-    fft_c1 = fft(abs2.(c1)) |> fftshift;
+    fft_c1 = fft(abs2.(c1)) |> fftshift
     max_indices, max_powers = findmaxima(abs.(fft_c1))
     axs[1, 2].semilogy(freqs, abs.(fft_c1), linewidth=1.2)
     max_freqs = freqs[max_indices]
     for (max_freq, max_power) in zip(max_freqs, max_powers)
         axs[1, 2].plot(max_freq, max_power, marker="o", color="red")
         axs[1, 2].annotate(
-            string(round(max_freq, digits=2)), 
-            (max_freq, max_power), 
-            textcoords="offset points", 
-            xytext=(0,10),  # Adjust this value to move the text vertically
+            string(round(max_freq, digits=2)),
+            (max_freq, max_power),
+            textcoords="offset points",
+            xytext=(0, 10),  # Adjust this value to move the text vertically
             rotation=90,
-            ha="center", 
-            va="bottom",  # Adjust this value to change the vertical alignment
+            ha="center",
             fontsize=10,
-            )
+        )
     end
     #axs[1, 2].plot(freqs, log.(abs.(fft_c1)), linewidth=1.2)
     axs[1, 2].set_title(L"log|FFT(|c_1|^2)|", fontsize=25)
@@ -110,15 +109,15 @@ for index in eachindex(quant_system.GLOB_EIG_E)
     for (max_freq, max_power) in zip(max_freqs, max_powers)
         axs[2, 2].plot(max_freq, max_power, marker="o", color="red")
         axs[2, 2].annotate(
-            string(round(max_freq, digits=2)), 
-            (max_freq, max_power), 
-            textcoords="offset points", 
-            xytext=(0,10),  # Adjust this value to move the text vertically
+            string(round(max_freq, digits=2)),
+            (max_freq, max_power),
+            textcoords="offset points",
+            xytext=(0, 10),  # Adjust this value to move the text vertically
             rotation=90,
-            ha="center", 
+            ha="center",
             va="bottom",  # Adjust this value to change the vertical alignment
             fontsize=10,
-            )
+        )
     end
     #axs[2, 2].plot(freqs, log.(abs.(Y1)), linewidth=1.2)
     axs[2, 2].set_title(L"log|FFT(var(|c_1|^2))|", fontsize=25)
@@ -128,7 +127,7 @@ for index in eachindex(quant_system.GLOB_EIG_E)
     axs[2, 2].tick_params(axis="x", labelsize=18)  # Increase x-ticks font size
     axs[2, 2].tick_params(axis="y", labelsize=18)  # Increase y-ticks font size
 
-    fig.suptitle("SpinX-SpinX Coupling; $N spins \n Energy: $(ene); Entanglement: $(entan)", fontsize=30)
+    fig.suptitle("PowerLaw Coupling; $N spins and Gamma $γ \n Energy: $(ene); Entanglement: $(entan)", fontsize=30)
     PyPlot.savefig("data/index_$index.svg",)
     PyPlot.close()
 end
