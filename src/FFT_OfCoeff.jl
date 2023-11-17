@@ -49,7 +49,7 @@ for index in eachindex(quant_system.GLOB_EIG_E)
     local c1 = Vector{ComplexF64}(undef, length(T))
     local c2 = Vector{ComplexF64}(undef, length(T))
 
-    for i in eachindex(T)
+    @threads for i in eachindex(T)
         t = T[i]
         ϕ = tensor(identityoperator(Hs), dagger(χ(t, quant_system.EΨ))) * quant_system.Ψ
         ϕ = ϕ / norm(ϕ)
