@@ -50,7 +50,12 @@ function UpdateIndex(System::SpinQuantSystem, index::Int64)
     println("Index updated to $index")
 end
 
-
+#= 
+The function below has been replaced by a more efficient version:
+    Which is simply:
+        tensor(I, dagger(χ(t, system.EΨ)))* system.Ψ
+    This old version is kept for reference.
+=#
 function φ_λ(t::Float64, system::SpinQuantSystem)
     clc_v = system.clock_func(t, system.EΨ)
     clock_coeff_conj = [dagger(clc_v) * c_basis for c_basis in system.HC_EIG_V]
