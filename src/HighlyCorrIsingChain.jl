@@ -9,12 +9,12 @@ using DelimitedFiles
 
 include("hamiltonian/powerLawCoupling.jl")
 
-HC_EIG_E_loc, HC_EIG_V_loc = eigenstates(dense(Hc));
+quant_system = SpinQuantSystem(Hs, Hc, V);
+HC_EIG_E_loc, HC_EIG_V_loc = quant_system.HC_EIG_E, quant_system.HC_EIG_V;
 function χ(t::Float64, E::Float64)
     return sum([exp(-im * (HC_EIG_E_loc[i] - E) * t) * HC_EIG_V_loc[i] for i in eachindex(HC_EIG_E_loc)])
 end
 
-quant_system = SpinQuantSystem(Hs, Hc, V, χ);
 ## Calculate Degeneracy
 energy_levels = quant_system.GLOB_EIG_E
 energy_levels = round.(energy_levels, digits=8)
