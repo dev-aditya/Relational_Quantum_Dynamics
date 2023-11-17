@@ -1,12 +1,12 @@
 module FiniteQuantSystem
-export SpinQuantSystem, calculate_eigenstates, UpdateIndex, φ_λ
+export SpinQuantSystem, UpdateIndex, φ_λ, calculate_eigenstates
 using QuantumOptics
 abstract type QuantumSystem end
 mutable struct SpinQuantSystem <: QuantumSystem
     Hs::Operator
     Hc::Operator
+    H::Operator
     V::Operator
-    clock_func::Function
     index::Int64
     HC_EIG_E::Vector{Float64}
     HC_EIG_V::Vector{Ket}
@@ -16,40 +16,36 @@ mutable struct SpinQuantSystem <: QuantumSystem
     PSI_EIG_V::Vector{Ket}
     Ψ::Ket
     EΨ::Float64
-    function SpinQuantSystem(Hs::Operator, Hc::Operator, V::Operator, clock_func::Function)
+    function SpinQuantSystem(Hs::Operator, Hc::Operator, V::Operator)
         println("Initializing SpinQuantSystem")
         system = new()
         system.Hs = Hs
         system.Hc = Hc
         system.V = V
-        system.clock_func = clock_func
         system.index = 1
-        println("Setting Default Index as 1")
         H = system.Hs ⊗ identityoperator(system.Hc) + identityoperator(system.Hs) ⊗ system.Hc + system.V
-        system.HC_EIG_E, system.HC_EIG_V = eigenstates(dense(system.Hc))
+        system.H = H
+        println("Calculating Global Eigenstates \n")
         system.GLOB_EIG_E, system.GLOB_EIG_V = eigenstates(dense(H))
+        println("Calculating Clock Eigenstates \n")
+        system.HC_EIG_E, system.HC_EIG_V = eigenstates(dense(system.Hc))
+        println("Calculating System Eigenstates \n")
         system.PSI_EIG_E, system.PSI_EIG_V = eigenstates(dense(system.Hs))
+        println("Setting Default State as the Ground State \n")
         system.Ψ = system.GLOB_EIG_V[system.index]
         system.EΨ = system.GLOB_EIG_E[system.index]
         return system
     end
 end
 
-function calculate_eigenstates(system::SpinQuantSystem)
-    H = system.Hs ⊗ identityoperator(system.Hc) + identityoperator(system.Hs) ⊗ system.Hc + system.V
-    HC_EIG_E, HC_EIG_V = eigenstates(dense(system.Hc))
-    GLOB_EIG_E, GLOB_EIG_V = eigenstates(dense(H))
-    PSI_EIG_E, PSI_EIG_V = eigenstates(dense(system.Hs))
-    return HC_EIG_E, HC_EIG_V, GLOB_EIG_E, GLOB_EIG_V, PSI_EIG_E, PSI_EIG_V
-end
-
 function UpdateIndex(System::SpinQuantSystem, index::Int64)
     System.index = index
     System.Ψ = System.GLOB_EIG_V[index]
     System.EΨ = System.GLOB_EIG_E[index]
-    println("Index updated to $index")
+    println("EigenIndex updated to $index")
 end
 
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 #= 
 The function below has been replaced by a more efficient version:
     Which is simply:
@@ -71,3 +67,15 @@ function φ_λ(t::Float64, system::SpinQuantSystem)
 end
 end
 
+#=
+    The function below is no longer used.
+    It has been kept for reference.
+=#
+function calculate_eigenstates(system::SpinQuantSystem)
+    H = system.Hs ⊗ identityoperator(system.Hc) + identityoperator(system.Hs) ⊗ system.Hc + system.V
+    HC_EIG_E, HC_EIG_V = eigenstates(dense(system.Hc))
+    GLOB_EIG_E, GLOB_EIG_V = eigenstates(dense(H))
+    PSI_EIG_E, PSI_EIG_V = eigenstates(dense(system.Hs))
+    return HC_EIG_E, HC_EIG_V, GLOB_EIG_E, GLOB_EIG_V, PSI_EIG_E, PSI_EIG_V
+end
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
