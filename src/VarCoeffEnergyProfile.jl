@@ -15,7 +15,7 @@ function χ(t::Float64, E::Float64)
     return sum([exp(-im * (HC_EIG_E_loc[i] - E) * t) * HC_EIG_V_loc[i] for i in eachindex(HC_EIG_E_loc)])
 end
 
-N_samp = 2^12 - 1
+N_samp = 2^11 - 1
 t0 = 0
 tmax = 2π
 Ts = tmax / N_samp
@@ -45,6 +45,6 @@ figure(figsize=(6, 8))
 hist2D(quant_system.GLOB_EIG_E, c1_var, bins=(80, 80), cmap="plasma", cmin=1)
 xlabel("Energy")
 ylabel(L"$\sigma^2_{|c_1|^2}$")
-title("Variance of the coefficient for N = $N spins")
+title("Variance of the coefficient for N = $N \n PowerLaw Gamma = $γ and l = $l")
 colorbar(orientation="horizontal") 
 PyPlot.savefig("data/VarianceCoeff_$N-spins.svg")

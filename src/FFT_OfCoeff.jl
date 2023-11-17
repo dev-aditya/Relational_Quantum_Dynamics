@@ -36,23 +36,24 @@ end
 outfile = "data/energy_degeneracy_$N.txt"
 writedlm(outfile, degeneracy, '\t')
 
-N_samp = 2^10 - 1
+N_samp = 2^11 - 1
 t0 = 0
-tmax = 2pi
+tmax = 4pi
 Ts = tmax / N_samp
 # time coordinate
 T = t0:Ts:tmax
 
 freqs = fftfreq(length(T), 1.0 / Ts) |> fftshift; ## Equivalent to fftshift(fftfreq(N, 1.0/Ts))
+KetList = Array{Ket}(undef, length(quant_system.GLOB_EIG_E), length(T))
 for index in eachindex(quant_system.GLOB_EIG_E)
     UpdateIndex(quant_system, index)
     local c1 = Vector{ComplexF64}(undef, length(T))
     local c2 = Vector{ComplexF64}(undef, length(T))
-
     @threads for i in eachindex(T)
         t = T[i]
         ϕ = tensor(identityoperator(Hs), dagger(χ(t, quant_system.EΨ))) * quant_system.Ψ
         ϕ = ϕ / norm(ϕ)
+        KetList[index, i] = ϕ
         c1[i] = ϕ.data[1]
         c2[i] = ϕ.data[2]
     end
@@ -85,7 +86,7 @@ for index in eachindex(quant_system.GLOB_EIG_E)
             xytext=(0, 10),  # Adjust this value to move the text vertically
             rotation=90,
             ha="center",
-            fontsize=10,
+            fontsize=9,
         )
     end
     #axs[1, 2].plot(freqs, log.(abs.(fft_c1)), linewidth=1.2)
@@ -97,9 +98,9 @@ for index in eachindex(quant_system.GLOB_EIG_E)
     axs[1, 2].tick_params(axis="y", labelsize=18)  # Increase y-ticks font size
     ##======##======
     axs[2, 1].plot(T, c1_var, linewidth=1.2)
-    axs[2, 1].set_title(L"var(|c_1|^2) = (|c_1|^2 - \overline{|c_1|^2})", fontsize=25)
+    axs[2, 1].set_title(L"std(|c_1|^2) = (|c_1|^2 - \overline{|c_1|^2})", fontsize=25)
     axs[2, 1].set_xlabel("T", fontsize=25)
-    axs[2, 1].set_ylabel(L"var(|c_1|^2)", fontsize=25)
+    axs[2, 1].set_ylabel(L"std(|c_1|^2)", fontsize=25)
     axs[2, 1].tick_params(axis="x", labelsize=14)  # Increase x-ticks font size
     axs[2, 1].tick_params(axis="y", labelsize=14)  # Increase y-ticks font size
     ##======##======
@@ -116,13 +117,13 @@ for index in eachindex(quant_system.GLOB_EIG_E)
             rotation=90,
             ha="center",
             va="bottom",  # Adjust this value to change the vertical alignment
-            fontsize=10,
+            fontsize=9,
         )
     end
     #axs[2, 2].plot(freqs, log.(abs.(Y1)), linewidth=1.2)
-    axs[2, 2].set_title(L"log|FFT(var(|c_1|^2))|", fontsize=25)
+    axs[2, 2].set_title(L"log|FFT(std(|c_1|^2))|", fontsize=25)
     axs[2, 2].set_xlabel("Freq(Hz)", fontsize=25)
-    axs[2, 2].set_ylabel(L"log|FFT(var(|c_1|^2)))|", fontsize=25)
+    axs[2, 2].set_ylabel(L"log|FFT(std(|c_1|^2)))|", fontsize=25)
     axs[2, 2].set_xlim(-20, 20)
     axs[2, 2].tick_params(axis="x", labelsize=18)  # Increase x-ticks font size
     axs[2, 2].tick_params(axis="y", labelsize=18)  # Increase y-ticks font size
@@ -131,3 +132,30 @@ for index in eachindex(quant_system.GLOB_EIG_E)
     PyPlot.savefig("data/index_$index.svg",)
     PyPlot.close()
 end
+
+OVERLAP = Array{Float64}(undef, length(quant_system.GLOB_EIG_E), length(quant_system.GLOB_EIG_E))
+for i in eachindex(quant_system.GLOB_EIG_E)
+    for j in eachindex(quant_system.GLOB_EIG_E)
+        overlap = Vector{Float64}(undef, length(T))
+        for k in eachindex(T)
+            overlap[k] = abs2(dagger(KetList[i, k]) * KetList[j, k])
+        end
+        OVERLAP[i, j] = mean(overlap)
+    end
+end
+figure(figsize=(10, 10))
+imshow(OVERLAP, cmap="plasma")
+
+# Add a color bar
+colorbar()
+
+# Add labels and title
+xlabel("Index j")
+ylabel("Index i")
+title("Overlap Matrix for PowerLaw Coupling; \n $N spins and Gamma $γ")
+
+# Save the figure
+savefig("data/overlap_matrix_$N.svg")
+
+# Close the figure
+close()
