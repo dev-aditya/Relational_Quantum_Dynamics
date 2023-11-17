@@ -66,16 +66,4 @@ function φ_λ(t::Float64, system::SpinQuantSystem)
     return state
 end
 end
-
-#=
-    The function below is no longer used.
-    It has been kept for reference.
-=#
-function calculate_eigenstates(system::SpinQuantSystem)
-    H = system.Hs ⊗ identityoperator(system.Hc) + identityoperator(system.Hs) ⊗ system.Hc + system.V
-    HC_EIG_E, HC_EIG_V = eigenstates(dense(system.Hc))
-    GLOB_EIG_E, GLOB_EIG_V = eigenstates(dense(H))
-    PSI_EIG_E, PSI_EIG_V = eigenstates(dense(system.Hs))
-    return HC_EIG_E, HC_EIG_V, GLOB_EIG_E, GLOB_EIG_V, PSI_EIG_E, PSI_EIG_V
-end
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
