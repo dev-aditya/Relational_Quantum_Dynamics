@@ -33,7 +33,7 @@ for index in eachindex(quant_system.GLOB_EIG_E)
 
     @threads for i in eachindex(T)
         t = T[i]
-        ϕ = φ_λ(t, quant_system)
+        ϕ = tensor(identityoperator(Hs), dagger(χ(t, quant_system.EΨ))) * quant_system.Ψ
         ϕ = ϕ / norm(ϕ)
         c1[i] = ϕ.data[1]
         c2[i] = ϕ.data[2]
