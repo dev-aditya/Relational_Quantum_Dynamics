@@ -6,7 +6,7 @@ SIGX = sigmax(b);
 SIGY = sigmay(b);
 I = identityoperator(b);
 
-N = 10 # Number of spins
+N = 8 # Number of spins
 # Define the Hamiltonian
 γ = 2.0
 l = 1.0
