@@ -93,7 +93,7 @@ for index in eachindex(quant_system.GLOB_EIG_E)
     axs[1, 2].set_title(L"log|FFT(|c_1|^2)|", fontsize=25)
     axs[1, 2].set_xlabel("Freq(Hz)", fontsize=25)
     axs[1, 2].set_ylabel(L"log|FFT(|c_1|^2)|", fontsize=25)
-    axs[1, 2].set_xlim(-20, 20)
+    axs[1, 2].set_xlim(0, 20)
     axs[1, 2].tick_params(axis="x", labelsize=18)  # Increase x-ticks font size
     axs[1, 2].tick_params(axis="y", labelsize=18)  # Increase y-ticks font size
     ##======##======
@@ -124,7 +124,7 @@ for index in eachindex(quant_system.GLOB_EIG_E)
     axs[2, 2].set_title(L"log|FFT(std(|c_1|^2))|", fontsize=25)
     axs[2, 2].set_xlabel("Freq(Hz)", fontsize=25)
     axs[2, 2].set_ylabel(L"log|FFT(std(|c_1|^2)))|", fontsize=25)
-    axs[2, 2].set_xlim(-20, 20)
+    axs[2, 2].set_xlim(0, 20)
     axs[2, 2].tick_params(axis="x", labelsize=18)  # Increase x-ticks font size
     axs[2, 2].tick_params(axis="y", labelsize=18)  # Increase y-ticks font size
 
