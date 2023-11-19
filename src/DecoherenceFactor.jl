@@ -35,7 +35,7 @@ for index in eachindex(quant_system.GLOB_EIG_E)
     local a_ = tensor(dagger(Ket0), identityoperator(Hc)) * quant_system.Ψ
     local b_ = tensor(dagger(Ket1), identityoperator(Hc)) * quant_system.Ψ
     Φ = Vector{Ket}(undef, length(T))
-    @threads for i in eachindex(T)
+    for i in eachindex(T)
         Φ[i] = tensor(identityoperator(Hs), dagger(χ(T[i], quant_system.EΨ))) * quant_system.Ψ
         Φ[i] = Φ[i] / norm(Φ[i])
         #αt = dagger(Ket0) * Φ[i]
