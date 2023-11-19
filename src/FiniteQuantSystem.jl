@@ -1,5 +1,5 @@
 module FiniteQuantSystem
-export SpinQuantSystem, UpdateIndex, φ_λ, calculate_eigenstates
+export SpinQuantSystem, UpdateIndex, φ_λ
 using QuantumOptics
 abstract type QuantumSystem end
 mutable struct SpinQuantSystem <: QuantumSystem

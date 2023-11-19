@@ -22,7 +22,7 @@ Ket0 = spinup(b)
 Ket1 = spindown(b)
 N_samp = 2^14 - 1
 t0 = 0
-tmax = 6pi
+tmax = 10pi
 Ts = tmax / N_samp
 # time coordinate
 global T = t0:Ts:tmax
@@ -41,7 +41,7 @@ for index in eachindex(quant_system.GLOB_EIG_E)
         #αt = dagger(Ket0) * Φ[i]
         #βt = dagger(Ket1) * Φ[i]
         #r_t_rel[i] = (dagger(b_) * a_)*(conj(βt)*αt)
-        r_t[i] = (dm(Φ[i]).data)[1, 2]
+        r_t[i] = (dm(Φ[i]).data)[1, 2] / (dm(Φ[1]).data)[1, 2]
     end
     entan = real(entanglement_entropy(quant_system.Ψ, [i for i = 2:N])) / log(2)
     # Create a new figure
