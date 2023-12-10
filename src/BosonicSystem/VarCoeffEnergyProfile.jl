@@ -7,12 +7,13 @@ using FFTW # for fft
 using Base.Threads
 PyPlot.rc("axes", grid=true)
 
-include("hamiltonian/powerLawCoupling.jl")
+include("hamiltonian/CoupledHarmonicOscillator.jl")
 
-quant_system = SpinQuantSystem(Hs, Hc, V);
+quant_system = BosonQuantumSystem(Hs, Hc, V);
 HC_EIG_E_loc, HC_EIG_V_loc = quant_system.HC_EIG_E, quant_system.HC_EIG_V;
+α = (1 + √5)/2
 function χ(t::Float64, E::Float64)
-    return sum([exp(-im * (HC_EIG_E_loc[i] - E) * t) * HC_EIG_V_loc[i] for i in eachindex(HC_EIG_E_loc)])
+    return coherentstate(bclc, exp(-im*E*t)*exp(-im * Ω * t)*α)
 end
 
 N_samp = 2^11 - 1
@@ -33,18 +34,21 @@ for index in eachindex(quant_system.GLOB_EIG_E)
     @threads for i in eachindex(T)
         t = T[i]
         ϕ = tensor(identityoperator(Hs), dagger(χ(t, quant_system.EΨ))) * quant_system.Ψ
-        ϕ = ϕ / norm(ϕ)
+        if norm(ϕ) == 0
+            ϕ = ϕ
+        else
+            ϕ = ϕ / norm(ϕ)
+        end
         c1[i] = ϕ.data[1]
         c2[i] = ϕ.data[2]
     end
     global c1_var[index] = var(abs2.(c1))
     global c2_var[index] = var(abs2.(c2))
 end
-
 figure(figsize=(6, 8))
-hist2D(quant_system.GLOB_EIG_E, c1_var, bins=(80, 80), cmap="plasma", cmin=1)
+hist2D(quant_system.GLOB_EIG_E, c1_var, bins=(300, 300), cmap="plasma", cmin=1)
 xlabel("Energy")
 ylabel(L"$\sigma^2_{|c_1|^2}$")
-title("Variance of the coefficient for N = $N \n PowerLaw Gamma = $γ and l = $l")
+title("CoupledHarmonicOscillator")
 colorbar(orientation="horizontal") 
-PyPlot.savefig("data/VarianceCoeff_$N-spins.svg")
+PyPlot.savefig("data/VarianceCoeff.png", dpi=300)

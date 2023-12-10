@@ -13,7 +13,7 @@ quant_system = BosonQuantumSystem(Hs, Hc, V);
 HC_EIG_E_loc, HC_EIG_V_loc = quant_system.HC_EIG_E, quant_system.HC_EIG_V;
 α = (1 + √5)/2
 function χ(t::Float64, E::Float64)
-    return coherentstate(bclc, exp(-im * Ω * t)*α)
+    return coherentstate(bclc, exp(-im*E*t)*exp(-im * Ω * t)*α)
 end
 
 ## Calculate Degeneracy
@@ -43,7 +43,11 @@ for index in eachindex(quant_system.GLOB_EIG_E)
     @threads for i in eachindex(T)
         t = T[i]
         ϕ = tensor(identityoperator(Hs), dagger(χ(t, quant_system.EΨ))) * quant_system.Ψ
-        ϕ = ϕ / norm(ϕ)
+        if norm(ϕ) == 0
+            ϕ = ϕ
+        else
+            ϕ = ϕ / norm(ϕ)
+        end
         c1[i] = ϕ.data[1]
         c2[i] = ϕ.data[2]
     end
@@ -58,5 +62,5 @@ for index in eachindex(quant_system.GLOB_EIG_E)
     xlabel!("t")
     ylabel!(L"|c_1|^2, |c_2|^2")
     title!("CoupledHarmonicOscillator, ", fontsize=9)
-    savefig("data/index_$index" * "CoupledHarmonicOscillator" * ".png",)
+    savefig("data/timeEvol/index_$index" * "CoupledHarmonicOscillator" * ".png")
 end

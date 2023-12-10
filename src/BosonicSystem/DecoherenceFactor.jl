@@ -15,7 +15,7 @@ quant_system = BosonQuantumSystem(Hs, Hc, V);
 HC_EIG_E_loc, HC_EIG_V_loc = quant_system.HC_EIG_E, quant_system.HC_EIG_V;
 α = (1 + √5)/2
 function χ(t::Float64, E::Float64)
-    return coherentstate(bclc, exp(-im * Ω * t)*α)
+    return coherentstate(bclc, exp(-im*E*t)*exp(-im * Ω * t)*α)
 end
 
 N_samp = 2^14 - 1
@@ -111,6 +111,6 @@ for index in eachindex(quant_system.GLOB_EIG_E)
 
     fig.suptitle("Coupled Harmonic Oscillator \n Energy: $(quant_system.EΨ); Entanglement: $(entan)")
     # Save the figure
-    savefig("data/r_t_index_$index.png")
+    savefig("data/DecohFact/r_t_index_$index.png")
     close(fig)
 end

@@ -21,15 +21,5 @@ xlabel("Energy")
 ylabel("Entropy")
 grid(true)
 title("CoupledHarmonicOscillator")
-PyPlot.savefig("data/EntropyEnergy-CoupledHarmonicOscillator_hist.png")
-
-figure(figsize=(6, 8))
-
-# Plot the 2D histogram
-plot(GLOB_EIG_E, ent, "o", markersize=1, color="black")
-# Set labels and title
-xlabel("Energy")
-ylabel("Entropy")
-grid(true)
-title("CoupledHarmonicOscillator")
-PyPlot.savefig("data/EntropyEnergy-CoupledHarmonicOscillator.png")
+PyPlot.savefig("data/EntropyEnergy-CoupledHarmonicOscillator_hist.png", dpi=300)
+println("done")
