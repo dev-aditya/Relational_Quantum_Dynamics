@@ -13,12 +13,13 @@ using Peaks
 1. Import the required Hamiltonians 
 2. Don't forgert to update the titles and labels of the plots. 
 =#
-include("hamiltonian/powerLawCoupling.jl")
-quant_system = SpinQuantSystem(Hs, Hc, V);
+include("hamiltonian/CoupledHarmonicOscillator.jl")
+quant_system = BosonQuantumSystem(Hs, Hc, V);
 HC_EIG_E_loc, HC_EIG_V_loc = quant_system.HC_EIG_E, quant_system.HC_EIG_V;
 
+α = (1 + √5)/2
 function χ(t::Float64, E::Float64)
-    return sum([exp(-im * (HC_EIG_E_loc[i] - E) * t) * HC_EIG_V_loc[i] for i in eachindex(HC_EIG_E_loc)])
+    return coherentstate(bclc, exp(-im * Ω * t)*α)
 end
 
 ## Calculate Degeneracy
@@ -33,18 +34,17 @@ for E in energy_levels
     end
 end
 
-outfile = "data/energy_degeneracy_$N.txt"
+outfile = "data/energy_degeneracy.txt"
 writedlm(outfile, degeneracy, '\t')
 
 N_samp = 2^11 - 1
 t0 = 0
-tmax = 4pi
+tmax = 2pi
 Ts = tmax / N_samp
 # time coordinate
 T = t0:Ts:tmax
 
 freqs = fftfreq(length(T), 1.0 / Ts) |> fftshift; ## Equivalent to fftshift(fftfreq(N, 1.0/Ts))
-KetList = Array{Ket}(undef, length(quant_system.GLOB_EIG_E), length(T))
 for index in eachindex(quant_system.GLOB_EIG_E)
     UpdateIndex(quant_system, index)
     local c1 = Vector{ComplexF64}(undef, length(T))
@@ -53,7 +53,6 @@ for index in eachindex(quant_system.GLOB_EIG_E)
         t = T[i]
         ϕ = tensor(identityoperator(Hs), dagger(χ(t, quant_system.EΨ))) * quant_system.Ψ
         ϕ = ϕ / norm(ϕ)
-        KetList[index, i] = ϕ
         c1[i] = ϕ.data[1]
         c2[i] = ϕ.data[2]
     end
@@ -61,7 +60,7 @@ for index in eachindex(quant_system.GLOB_EIG_E)
     local c1_var = (abs2.(c1) .- mean(abs2.(c1)))
     local c2_var = (abs2.(c2) .- mean(abs2.(c2)))
     Y1 = fft(c1_var) |> fftshift
-    entan = real(entanglement_entropy(quant_system.Ψ, [i for i = 2:N])) / log(2)
+    entan = real(entanglement_entropy(quant_system.Ψ, [2])) / log(2)
     fig, axs = subplots(2, 2, figsize=(45, 27),)
     ##==============
     axs[1, 1].plot(T, abs2.(c1), label=L"|c_1|^2", color="red",)
@@ -128,8 +127,8 @@ for index in eachindex(quant_system.GLOB_EIG_E)
     axs[2, 2].tick_params(axis="x", labelsize=18)  # Increase x-ticks font size
     axs[2, 2].tick_params(axis="y", labelsize=18)  # Increase y-ticks font size
 
-    fig.suptitle("PowerLaw Coupling; $N spins and Gamma $γ \n Energy: $(ene); Entanglement: $(entan)", fontsize=30)
-    PyPlot.savefig("data/index_$index.svg",)
+    fig.suptitle("Coupled Harmonic Oscillator \n Energy: $(ene); Entanglement: $(entan)", fontsize=30)
+    PyPlot.savefig("data/FFT/index_$index.png")
     PyPlot.close()
 end
 
@@ -152,10 +151,10 @@ colorbar()
 # Add labels and title
 xlabel("Index j")
 ylabel("Index i")
-title("Overlap Matrix for PowerLaw Coupling; \n $N spins and Gamma $γ")
+title("Overlap Matrix CoupQSHO")
 
 # Save the figure
-savefig("data/overlap_matrix_$N.svg")
+savefig("data/overlap_matrix.svg")
 
 # Close the figure
 close()

@@ -10,19 +10,17 @@ using DelimitedFiles
 using FFTW # for fft
 using Peaks
 
-include("hamiltonian/powerLawCoupling.jl")
-quant_system = SpinQuantSystem(Hs, Hc, V);
+include("hamiltonian/CoupledHarmonicOscillator.jl")
+quant_system = BosonQuantumSystem(Hs, Hc, V);
 HC_EIG_E_loc, HC_EIG_V_loc = quant_system.HC_EIG_E, quant_system.HC_EIG_V;
-
+α = (1 + √5)/2
 function χ(t::Float64, E::Float64)
-    return sum([exp(-im * (HC_EIG_E_loc[i] - E) * t) * HC_EIG_V_loc[i] for i in eachindex(HC_EIG_E_loc)])
+    return coherentstate(bclc, exp(-im * Ω * t)*α)
 end
 
-Ket0 = spinup(b)
-Ket1 = spindown(b)
 N_samp = 2^14 - 1
 t0 = 0
-tmax = 10pi
+tmax = 2pi
 Ts = tmax / N_samp
 # time coordinate
 global T = t0:Ts:tmax
@@ -32,18 +30,13 @@ for index in eachindex(quant_system.GLOB_EIG_E)
     local r_t = Vector{ComplexF64}(undef, length(T))
     UpdateIndex(quant_system, index)
     energy = quant_system.GLOB_EIG_E[index]
-    local a_ = tensor(dagger(Ket0), identityoperator(Hc)) * quant_system.Ψ
-    local b_ = tensor(dagger(Ket1), identityoperator(Hc)) * quant_system.Ψ
     Φ = Vector{Ket}(undef, length(T))
     for i in eachindex(T)
         Φ[i] = tensor(identityoperator(Hs), dagger(χ(T[i], quant_system.EΨ))) * quant_system.Ψ
         Φ[i] = Φ[i] / norm(Φ[i])
-        #αt = dagger(Ket0) * Φ[i]
-        #βt = dagger(Ket1) * Φ[i]
-        #r_t_rel[i] = (dagger(b_) * a_)*(conj(βt)*αt)
         r_t[i] = (dm(Φ[i]).data)[1, 2] / (dm(Φ[1]).data)[1, 2]
     end
-    entan = real(entanglement_entropy(quant_system.Ψ, [i for i = 2:N])) / log(2)
+    entan = real(entanglement_entropy(quant_system.Ψ, [2])) / log(2)
     # Create a new figure
     r_t_abs2 = abs2.(r_t)
     fig = figure(figsize=(15, 10))
@@ -92,7 +85,7 @@ for index in eachindex(quant_system.GLOB_EIG_E)
     axs[3].set_ylabel(L"FFT(|r(t)|^2)")
     axs[3].set_xlabel(L"f")
     axs[3].legend()
-    axs[3].set_xlim(0, 2)
+    axs[3].set_xlim(0, 10)
 
     c1 = [Φ[i].data[1] for i in eachindex(Φ)]
     c1_fft = fft(abs2.(c1) .- mean(abs2.(c1))) |> fftshift
@@ -114,9 +107,9 @@ for index in eachindex(quant_system.GLOB_EIG_E)
     axs[4].set_ylabel(L"FFT(|c_1|^2)")
     axs[4].set_xlabel(L"f")
     axs[4].legend()
-    axs[4].set_xlim(0, 2)
+    axs[4].set_xlim(0, 10)
 
-    fig.suptitle("PowerLaw Coupling; $N spins and Gamma $γ \n Energy: $(quant_system.EΨ); Entanglement: $(entan)")
+    fig.suptitle("Coupled Harmonic Oscillator \n Energy: $(quant_system.EΨ); Entanglement: $(entan)")
     # Save the figure
     savefig("data/r_t_index_$index.png")
     close(fig)

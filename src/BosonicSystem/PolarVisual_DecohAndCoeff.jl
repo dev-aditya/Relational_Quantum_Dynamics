@@ -17,24 +17,19 @@ sns = pyimport("seaborn")
 # Set the seaborn style
 sns.set()
 
-include("hamiltonian/powerLawCoupling.jl")
-quant_system = SpinQuantSystem(Hs, Hc, V);
+include("hamiltonian/CoupledHarmonicOscillator.jl")
+quant_system = BosonQuantumSystem(Hs, Hc, V);
 HC_EIG_E_loc, HC_EIG_V_loc = quant_system.HC_EIG_E, quant_system.HC_EIG_V;
-coherentState = coherentspinstate(b, Real(pi/3), Real(pi/4))
-println("Initializing the coherent State")
-@time coherentState = tensor([coherentState for i in eachindex(HC_EIG_E_loc)]...)
-@time coeff_clc = [dagger(HC_EIG_V_loc[i]) * coherentState for i in eachindex(HC_EIG_E_loc)]
+α = (1 + √5)/2
 function χ(t::Float64, E::Float64)
-    return sum([exp(-im * (HC_EIG_E_loc[i] - E) * t) * coeff_clc[i] * HC_EIG_V_loc[i] for i in eachindex(HC_EIG_E_loc)])
+    return coherentstate(bclc, exp(-im * Ω * t)*α)
 end
 
 Energy_expect = expect(Hc, χ(0.0, quant_system.EΨ))
 
-Ket0 = spinup(b)
-Ket1 = spindown(b)
-N_samp = 2^14 - 1
+N_samp = 2^11 - 1
 t0 = 0
-tmax = 6pi
+tmax = 4pi
 Ts = tmax / N_samp
 # time coordinate
 global T = t0:Ts:tmax
@@ -42,20 +37,19 @@ global freqs = fftfreq(length(T), 1.0 / Ts) |> fftshift
 for index in eachindex(quant_system.GLOB_EIG_E)
     local r_t_rel = Vector{ComplexF64}(undef, length(T))
     local r_t = Vector{ComplexF64}(undef, length(T))
+    local c_1 = Vector{ComplexF64}(undef, length(T))
+    local c_2 = Vector{ComplexF64}(undef, length(T))
     UpdateIndex(quant_system, index)
     energy = quant_system.GLOB_EIG_E[index]
-    local a_ = tensor(dagger(Ket0), identityoperator(Hc)) * quant_system.Ψ
-    local b_ = tensor(dagger(Ket1), identityoperator(Hc)) * quant_system.Ψ
     Φ = Vector{Ket}(undef, length(T))
     for i in eachindex(T)
         Φ[i] = tensor(identityoperator(Hs), dagger(χ(T[i], quant_system.EΨ))) * quant_system.Ψ
         Φ[i] = Φ[i] / norm(Φ[i])
-        #αt = dagger(Ket0) * Φ[i]
-        #βt = dagger(Ket1) * Φ[i]
-        #r_t_rel[i] = (dagger(b_) * a_)*(conj(βt)*αt)
+        c_1[i] = Φ[i].data[1]
+        c_2[i] = Φ[i].data[2]
         r_t[i] = (dm(Φ[i]).data)[1, 2] / (dm(Φ[1]).data)[1, 2]
     end
-    entan = real(entanglement_entropy(quant_system.Ψ, [i for i = 2:N])) / log(2)
+    entan = real(entanglement_entropy(quant_system.Ψ, [2])) / log(2)
     # Your code...
     fig = figure(figsize=(15, 10))
     axs = Array{Any}(undef, 3, 2)
@@ -63,10 +57,6 @@ for index in eachindex(quant_system.GLOB_EIG_E)
     axs[1] = subplot2grid((2, 2), (0, 0), rowspan=2, polar=true)
     axs[2] = subplot2grid((2, 2), (0, 1), polar=true)
     axs[3] = subplot2grid((2, 2), (1, 1), polar=true)
-
-        # Calculate c_1 and c_2
-        c_1 = [Φ[i].data[1] for i in eachindex(Φ)]
-        c_2 = [Φ[i].data[2] for i in eachindex(Φ)]
 
         # Create the polar plots
     # Your code...
@@ -85,7 +75,7 @@ for index in eachindex(quant_system.GLOB_EIG_E)
     axs[3].grid(linewidth=0.5)  # Adjust the grid lines
 
     ratio = abs(real(Energy_expect/quant_system.EΨ))
-    fig.suptitle("PowerLaw Coupling; $N spins and Gamma $γ Ratio: $(ratio) \n Energy: $(quant_system.EΨ); Entanglement: $(entan)")
+    fig.suptitle("Coupled Harmonic Oscillator \n Energy: $(quant_system.EΨ); Entanglement: $(entan)")
     # Save the figure
     savefig("data/polar_r_t_index_$index.png")
     close(fig)

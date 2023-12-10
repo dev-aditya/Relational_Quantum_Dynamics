@@ -6,13 +6,13 @@ bclc = FockBasis(500)
 asys = destroy(bsys)
 aclc = destroy(bclc)
 
-Nsys = number(asys)
-Nclc = number(aclc)
+Nsys = number(bsys)
+Nclc = number(bclc)
 
-ω = 2π*1e2
+ω = 2π
 Ω = 2π
 ħ = 1.0
-Hs = ω*(Nsys + 0.5)
-Hc = Ω*(Nclc + 0.5)
+Hs = ħ*ω*(Nsys + 0.5*identityoperator(bsys))
+Hc = ħ*Ω*(Nclc + 0.5*identityoperator(bclc))
 
-V = 2π*1e-3*(asys + dagger(asys)) ⊗ (aclc + dagger(aclc))
+V = ħ*1*(asys + dagger(asys)) ⊗ (aclc + dagger(aclc))

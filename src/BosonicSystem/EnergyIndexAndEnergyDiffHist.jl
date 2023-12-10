@@ -1,7 +1,7 @@
 using QuantumOptics
 using PyPlot
 
-include("hamiltonian/powerLawCoupling.jl")
+include("hamiltonian/CoupledHarmonicOscillator.jl")
 H = identityoperator(Hs) ⊗ Hc + Hs ⊗ identityoperator(Hc) + V
 GLOB_EIG_E, GLOB_EIG_V = eigenstates(dense(H))
 
@@ -22,5 +22,5 @@ axs[2].set_title("Normalized Energy Difference Histogram")
 axs[2].set_xlim(0, 1.0)
 axs[2].grid(true)
 
-fig.suptitle("Entropy Energy for N = $N\n PowerLaw Gamma = $γ and l = $l")
-PyPlot.savefig("data/EnergyDistHist_forN$N.svg")
+fig.suptitle("Coupled Harmonic Oscillators")
+PyPlot.savefig("data/EnergyDistHist.svg")
