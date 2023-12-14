@@ -17,5 +17,5 @@ Hc = ħ*Ω*(Nclc + 0.5*identityoperator(bclc))
 xsys = (asys + dagger(asys))/√2
 xclc = (aclc + dagger(aclc))/√2
 λ = ħ*√3
-V = λ*xsys ⊗ xclc
+V = λ*(xsys ⊗ xclc)
 sqrtxsys = sqrt(dense(xsys).data)

@@ -15,10 +15,10 @@ axs[1].set_ylabel("Energy")
 axs[1].set_title("Energy vs Index")
 axs[1].grid(true)
 
-axs[2].hist(diff(GLOB_EIG_E), bins=1000, edgecolor="black", linewidth=0.5, density=true,)
+axs[2].hist(diff(GLOB_EIG_E), bins=1000, edgecolor="black", linewidth=0.5, density=false,)
 axs[2].set_xlabel(L"\Delta E")
 axs[2].set_ylabel(L"d(\Delta E)")
-axs[2].set_title("Normalized Energy Difference Histogram")
+axs[2].set_title("  UnNormalized Energy Difference Histogram")
 axs[2].set_xlim(0, 1.0)
 axs[2].grid(true)
 
