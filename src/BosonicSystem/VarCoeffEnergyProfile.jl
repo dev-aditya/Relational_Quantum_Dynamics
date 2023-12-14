@@ -18,7 +18,7 @@ end
 
 N_samp = 2^11 - 1
 t0 = 0
-tmax = 2π
+tmax = 1
 Ts = tmax / N_samp
 # time coordinate
 T = t0:Ts:tmax
@@ -34,7 +34,7 @@ for index in eachindex(quant_system.GLOB_EIG_E)
     @threads for i in eachindex(T)
         t = T[i]
         ϕ = tensor(identityoperator(Hs), dagger(χ(t))) * quant_system.Ψ
-        if norm(ϕ) == 0
+        if abs(norm(ϕ)) == 0
             ϕ = ϕ
         else
             ϕ = ϕ / norm(ϕ)

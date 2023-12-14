@@ -1,7 +1,7 @@
 using QuantumOptics
-
+N = 1000
 bsys = FockBasis(1)
-bclc = FockBasis(500)
+bclc = FockBasis(1000)
 
 asys = destroy(bsys)
 aclc = destroy(bclc)
