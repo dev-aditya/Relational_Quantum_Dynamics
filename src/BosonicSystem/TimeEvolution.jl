@@ -1,7 +1,7 @@
 include("FiniteQuantSystem.jl")
 using .FiniteQuantSystem
 using QuantumOptics
-using Plots
+using PyPlot
 using Base.Threads
 using Statistics
 using LaTeXStrings
@@ -57,10 +57,10 @@ for index in eachindex(quant_system.GLOB_EIG_E)
     #var_c2[index] = var(c2)
     entan = real(entanglement_entropy(quant_system.Ψ, [2]))/log(2)
     ent_vec[index] = entan
-    plot(T, abs.(c1), label=("c1 Ene: " * string(quant_system.EΨ)), legend=:right)
-    plot!(T, abs.(c2), label=("c2 Ent: " * string(entan)), legend=:right, figsize=(19.20, 15.80))
-    xlabel!("t")
-    ylabel!(L"|c_1|^2, |c_2|^2")
-    title!("CoupledHarmonicOscillator, ", fontsize=9)
+    plot(T, abs.(c1), label=("c1 Ene: " * string(quant_system.EΨ)))
+    plot(T, abs.(c2), label=("c2 Ent: " * string(entan)))
+    xlabel("t")
+    ylabel(L"|c_1|^2, |c_2|^2")
     savefig("data/timeEvol/index_$index" * "CoupledHarmonicOscillator" * ".png")
+    close()
 end
