@@ -27,9 +27,9 @@ end
 
 Energy_expect = expect(Hc, χ(0.0, quant_system.EΨ))
 
-N_samp = 2^11 - 1
+N_samp = 2^10 - 1
 t0 = 0
-tmax = 4pi
+tmax = 1
 Ts = tmax / N_samp
 # time coordinate
 global T = t0:Ts:tmax
@@ -77,6 +77,6 @@ for index in eachindex(quant_system.GLOB_EIG_E)
     ratio = abs(real(Energy_expect/quant_system.EΨ))
     fig.suptitle("Coupled Harmonic Oscillator \n Energy: $(quant_system.EΨ); Entanglement: $(entan)")
     # Save the figure
-    savefig("data/polar_r_t_index_$index.png")
+    savefig("data/DecohFact/polar_r_t_index_$index.png")
     close(fig)
 end

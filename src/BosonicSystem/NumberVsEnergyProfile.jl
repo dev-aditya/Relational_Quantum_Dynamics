@@ -4,23 +4,20 @@ using PyPlot
 include("hamiltonian/CoupledHarmonicOscillatorX2.jl")
 H = identityoperator(Hs) ⊗ Hc + Hs ⊗ identityoperator(Hc) + V
 GLOB_EIG_E, GLOB_EIG_V = eigenstates(dense(H))
-function Entropy(Ψ::Ket)
-    return real(entanglement_entropy(Ψ, [2]))/log(2)
-end
-
-ent = Entropy.(GLOB_EIG_V)
+N = identityoperator(Nsys) ⊗ Nclc + Nsys ⊗ identityoperator(Nclc)
+Num = abs.(expect(N, GLOB_EIG_V))
 
 # Create a new figure
 figure(figsize=(6, 8))
 
 # Plot the 2D histogram
-hist2D(GLOB_EIG_E, ent, bins=(300, 300), cmap="plasma", cmin=1)
+hist2D(GLOB_EIG_E, Num, bins=(300, 300), cmap="plasma", cmin=1)
 colorbar(orientation="horizontal")
 # Set labels and title
 xlabel("Energy")
-ylabel("Entropy")
+ylabel(L"\langle N \rangle")
 grid(true)
-title("CoupledHarmonicOscillator with Xs x Xc^2 coupling at \n CutOff N = $N_")
-PyPlot.savefig("data/EntropyEnergy-CoupledHarmonicOscillator_hist.png", dpi=300)
+title("CoupledHarmonicOscillator with Xs x Xc^2 coupling at CutOff N = $N_")
+PyPlot.savefig("data/NumberVsEnergy.png", dpi=300)
 println("done")
 close("all")

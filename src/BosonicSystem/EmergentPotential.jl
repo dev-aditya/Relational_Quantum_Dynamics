@@ -16,7 +16,8 @@ include("hamiltonian/CoupledHarmonicOscillator.jl")
 quant_system = BosonQuantumSystem(Hs, Hc, V);
 HC_EIG_E_loc, HC_EIG_V_loc = quant_system.HC_EIG_E, quant_system.HC_EIG_V;
 
-α = (1 + √5)/2 + (1 - √5)/2 * im
+φ = (1 + √5)/2 
+α = sqrt(6) * exp(im * φ)
 function χ(t::Float64, E::Float64)
     return coherentstate(bclc, exp(-im * Ω * t)*α)
 end

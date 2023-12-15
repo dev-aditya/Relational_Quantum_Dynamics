@@ -7,11 +7,12 @@ using FFTW # for fft
 using Base.Threads
 PyPlot.rc("axes", grid=true)
 
-include("hamiltonian/CoupledHarmonicOscillator.jl")
+include("hamiltonian/CoupledHarmonicOscillatorX2.jl")
 
 quant_system = BosonQuantumSystem(Hs, Hc, V);
 HC_EIG_E_loc, HC_EIG_V_loc = quant_system.HC_EIG_E, quant_system.HC_EIG_V;
-α = (1 + √5)/2 + (1 + √5)/2 * im
+φ = (1 + √5)/2 
+α = sqrt(300) * exp(im * φ)
 function χ(t::Float64)
     return coherentstate(bclc, exp(-im * Ω * t)*α)
 end
@@ -49,6 +50,6 @@ figure(figsize=(6, 8))
 hist2D(quant_system.GLOB_EIG_E, c1_var, bins=(300, 300), cmap="plasma", cmin=1)
 xlabel("Energy")
 ylabel(L"$\sigma^2_{|c_1|^2}$")
-title("CoupledHarmonicOscillator")
+title("CoupledHarmonicOscillator with Xs x Xc^2 coupling at\n CutOff N = $N_ \n |α|^2 = $(abs(α)^2)")
 colorbar(orientation="horizontal") 
 PyPlot.savefig("data/VarianceCoeff.png", dpi=300)
