@@ -10,17 +10,19 @@ PyPlot.plt.style.use("seaborn")
 include("hamiltonian/CoupledHarmonicOscillatorX2.jl")
 
 quant_system = BosonQuantumSystem(Hs, Hc, V);
-HC_EIG_E_loc, HC_EIG_V_loc = quant_system.HC_EIG_E, quant_system.HC_EIG_V;
 φ = (1 + √5)/2 
-α = sqrt(300) * exp(im * φ)
+α = quant_system.GLOB_EIG_E[368] / (ħ*Ω) - 1/2
+α = sqrt(α) * exp(im * φ)
 function χ(t::Float64)
     return coherentstate(bclc, exp(-im * Ω * t)*α)
 end
 N = identityoperator(Nsys) ⊗ Nclc + Nsys ⊗ identityoperator(Nclc)
-T_ = LinRange(0, 1, 1000)
+T_ = LinRange(0, 1, 5000)
 ## Semiclassical Hamiltonian for quant_system
 over_var = Vector{Float64}(undef, length(quant_system.GLOB_EIG_E))
-H_semi(t, ψ) = Hs + λ*(sqrt(2)*abs(α)*cos(Ω*t- φ))^2*xsys
+H_semi(t, ψ) = Hs + λ*(sqrt(2)*abs(α)*cos(Ω*t- φ))*xsys
+Xclc2 = xclc^2
+#H_semi(t, ψ) = Hs + λ*expect(Xclc2, χ(t))*xsys
 for index in eachindex(quant_system.GLOB_EIG_E)
     UpdateIndex(quant_system, index)
     local overlap = Vector{ComplexF64}(undef, length(T_))
@@ -30,6 +32,7 @@ for index in eachindex(quant_system.GLOB_EIG_E)
     c1_semi = Vector{Float64}(undef, length(T_))
     c1_rqm  = Vector{Float64}(undef, length(T))
     Num_glob = round(abs(expect(N, quant_system.Ψ)), digits=3) 
+    Ec = real(expect(Hc, χ(0.0)))
     @threads for i in eachindex(T_)
         ψt_ = psi_semi_t[i]
         if abs(norm(ψt_)) == 0
@@ -71,8 +74,10 @@ for index in eachindex(quant_system.GLOB_EIG_E)
     ax[2].set_xlabel(L"t")
     ax[2].set_ylabel(L"|⟨ψ(t)|ψ_{semi}(t)⟩|")
     ax[2].set_title("Overlap")
-    fig.suptitle("CoupledHarmonicOscillator with Xs x Xc^2 coupling, CutOff at N = $N_ \n" 
-    * "E = $(quant_system.EΨ) , S = $entan, |α|^2 = $(abs(α)^2), Nglob = $Num_glob", fontsize=10)
+    ax[2].set_ylim([0, 1])
+    fig.suptitle("CoupledHarmonicOscillator with Xs x Xc coupling, CutOff at N = $N_ \n" 
+    * "E = $(round(quant_system.EΨ, digits=3)) , S = $(round(entan, digits=4)), |α|^2 = $(abs(α)^2), Nglob = $Num_glob \n 
+    E - Ec = $(abs(quant_system.EΨ - Ec))", fontsize=10)
     savefig("data/ClassVsQuant/index_$(index).png", dpi=300)
     close(fig)
 end
@@ -81,7 +86,7 @@ figure(figsize=(7, 10))
 over_var = over_var
 over_var = replace(over_var, NaN => 0)
 over_var = replace(over_var, Inf => 0)
-title("CoupledHarmonicOscillator with Xs x Xc^2 coupling, CutOff at N = $N_")
+title("CoupledHarmonicOscillator with Xs x Xc coupling, CutOff at N = $N_")
 xlabel("Energy")
 ylabel(L"mean(|⟨ψ(t)|ψ_{semi}(t)⟩|)")
 # Plot the 2D histogram
