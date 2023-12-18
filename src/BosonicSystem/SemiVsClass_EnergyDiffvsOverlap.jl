@@ -7,12 +7,12 @@ using Statistics
 using LaTeXStrings
 PyPlot.plt.style.use("seaborn")
 
-include("hamiltonian/CoupledHarmonicOscillatorX2.jl")
+include("hamiltonian/CoupledHarmonicOscillator.jl")
 
-quant_system = BosonQuantumSystem(Hs, Hc, V);
 φ = (1 + √5)/2 
-α = quant_system.GLOB_EIG_E[368] / (ħ*Ω) - 1/2
+α = 300
 α = sqrt(α) * exp(im * φ)
+quant_system = BosonQuantumSystem(Hs, Hc, V/abs(α));
 function χ(t::Float64)
     return coherentstate(bclc, exp(-im * Ω * t)*α)
 end
@@ -21,7 +21,7 @@ T_ = LinRange(0, 1, 5000)
 ## Semiclassical Hamiltonian for quant_system
 over_var = Vector{Float64}(undef, length(quant_system.GLOB_EIG_E))
 EnergyDiff = Vector{Float64}(undef, length(quant_system.GLOB_EIG_E))
-H_semi(t, ψ) = Hs + λ*(sqrt(2)*abs(α)*cos(Ω*t- φ))^2*xsys
+H_semi(t, ψ) = Hs + λ*(sqrt(2)*abs(α)*cos(Ω*t- φ))/abs(α)*xsys
 #Xclc2 = xclc^2
 #H_semi(t, ψ) = Hs + λ*expect(Xclc2, χ(t))*xsys
 for index in eachindex(quant_system.GLOB_EIG_E)
@@ -57,7 +57,7 @@ figure(figsize=(7, 10))
 over_var = over_var
 over_var = replace(over_var, NaN => 0)
 over_var = replace(over_var, Inf => 0)
-title("CoupledHarmonicOscillator with Xs x Xc^2 coupling, CutOff at N = $N_")
+title("CoupledHarmonicOscillator with Xs x (Xc/α) coupling, CutOff at N = $N_")
 xlabel(L"E_{glob} - E_{clock}")
 ylabel(L"mean|⟨ψ(t)|ψ_{semi}(t)⟩|")
 ylim([0, 1])

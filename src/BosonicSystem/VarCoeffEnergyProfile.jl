@@ -3,16 +3,14 @@ using .FiniteQuantSystem
 using QuantumOptics
 using PyPlot
 using Statistics
-using FFTW # for fft
 using Base.Threads
 PyPlot.rc("axes", grid=true)
 
 include("hamiltonian/CoupledHarmonicOscillatorX2.jl")
-
-quant_system = BosonQuantumSystem(Hs, Hc, V);
-HC_EIG_E_loc, HC_EIG_V_loc = quant_system.HC_EIG_E, quant_system.HC_EIG_V;
 φ = (1 + √5)/2 
-α = sqrt(300) * exp(im * φ)
+α = 300
+α = sqrt(α) * exp(im * φ)
+quant_system = BosonQuantumSystem(Hs, Hc, V/abs(α)^2);
 function χ(t::Float64)
     return coherentstate(bclc, exp(-im * Ω * t)*α)
 end
@@ -23,8 +21,6 @@ tmax = 1
 Ts = tmax / N_samp
 # time coordinate
 T = t0:Ts:tmax
-
-freqs = fftfreq(length(T), 1.0/Ts) |> fftshift; ## Equivalent to fftshift(fftfreq(N, 1.0/Ts))
 c1_var = Vector{Float64}(undef, length(quant_system.GLOB_EIG_E))
 c2_var = Vector{Float64}(undef, length(quant_system.GLOB_EIG_E))
 for index in eachindex(quant_system.GLOB_EIG_E)
@@ -50,6 +46,6 @@ figure(figsize=(6, 8))
 hist2D(quant_system.GLOB_EIG_E, c1_var, bins=(300, 300), cmap="plasma", cmin=1)
 xlabel("Energy")
 ylabel(L"$\sigma^2_{|c_1|^2}$")
-title("CoupledHarmonicOscillator with Xs x Xc^2 coupling at\n CutOff N = $N_ \n |α|^2 = $(abs(α)^2)")
+title("CoupledHarmonicOscillator with Xs x (Xc/α)^2 coupling at\n CutOff N = $N_ \n |α|^2 = $(abs(α)^2)")
 colorbar(orientation="horizontal") 
 PyPlot.savefig("data/VarianceCoeff.png", dpi=300)

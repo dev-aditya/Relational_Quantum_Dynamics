@@ -2,7 +2,10 @@ using QuantumOptics
 using PyPlot
 
 include("hamiltonian/CoupledHarmonicOscillatorX2.jl")
-H = identityoperator(Hs) ⊗ Hc + Hs ⊗ identityoperator(Hc) + V
+φ = (1 + √5)/2 
+α = 300
+α = sqrt(α) * exp(im * φ)
+H = identityoperator(Hs) ⊗ Hc + Hs ⊗ identityoperator(Hc) + V/abs(α)
 GLOB_EIG_E, GLOB_EIG_V = eigenstates(dense(H))
 N = identityoperator(Nsys) ⊗ Nclc + Nsys ⊗ identityoperator(Nclc)
 Num = abs.(expect(N, GLOB_EIG_V))

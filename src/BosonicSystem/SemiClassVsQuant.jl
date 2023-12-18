@@ -5,14 +5,12 @@ using PyPlot
 using Base.Threads
 using Statistics
 using LaTeXStrings
-PyPlot.plt.style.use("seaborn")
 
-include("hamiltonian/CoupledHarmonicOscillatorX2.jl")
-
-quant_system = BosonQuantumSystem(Hs, Hc, V);
+include("hamiltonian/CoupledHarmonicOscillator.jl")
 φ = (1 + √5)/2 
-α = quant_system.GLOB_EIG_E[368] / (ħ*Ω) - 1/2
+α = 300
 α = sqrt(α) * exp(im * φ)
+quant_system = BosonQuantumSystem(Hs, Hc, V/abs(α));
 function χ(t::Float64)
     return coherentstate(bclc, exp(-im * Ω * t)*α)
 end
@@ -20,8 +18,8 @@ N = identityoperator(Nsys) ⊗ Nclc + Nsys ⊗ identityoperator(Nclc)
 T_ = LinRange(0, 1, 5000)
 ## Semiclassical Hamiltonian for quant_system
 over_var = Vector{Float64}(undef, length(quant_system.GLOB_EIG_E))
-H_semi(t, ψ) = Hs + λ*(sqrt(2)*abs(α)*cos(Ω*t- φ))*xsys
-Xclc2 = xclc^2
+H_semi(t, ψ) = Hs + λ*(sqrt(2)*abs(α)*cos(Ω*t- φ))/abs(α)*xsys
+#Xclc2 = xclc^2
 #H_semi(t, ψ) = Hs + λ*expect(Xclc2, χ(t))*xsys
 for index in eachindex(quant_system.GLOB_EIG_E)
     UpdateIndex(quant_system, index)
@@ -75,7 +73,7 @@ for index in eachindex(quant_system.GLOB_EIG_E)
     ax[2].set_ylabel(L"|⟨ψ(t)|ψ_{semi}(t)⟩|")
     ax[2].set_title("Overlap")
     ax[2].set_ylim([0, 1])
-    fig.suptitle("CoupledHarmonicOscillator with Xs x Xc coupling, CutOff at N = $N_ \n" 
+    fig.suptitle("CoupledHarmonicOscillator with Xs x (Xc/α) coupling, CutOff at N = $N_ \n" 
     * "E = $(round(quant_system.EΨ, digits=3)) , S = $(round(entan, digits=4)), |α|^2 = $(abs(α)^2), Nglob = $Num_glob \n 
     E - Ec = $(abs(quant_system.EΨ - Ec))", fontsize=10)
     savefig("data/ClassVsQuant/index_$(index).png", dpi=300)
@@ -86,7 +84,7 @@ figure(figsize=(7, 10))
 over_var = over_var
 over_var = replace(over_var, NaN => 0)
 over_var = replace(over_var, Inf => 0)
-title("CoupledHarmonicOscillator with Xs x Xc coupling, CutOff at N = $N_")
+title("CoupledHarmonicOscillator with Xs x (Xc/α) coupling, CutOff at N = $N_")
 xlabel("Energy")
 ylabel(L"mean(|⟨ψ(t)|ψ_{semi}(t)⟩|)")
 # Plot the 2D histogram

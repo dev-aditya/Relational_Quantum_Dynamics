@@ -2,7 +2,10 @@ using QuantumOptics
 using PyPlot
 
 include("hamiltonian/CoupledHarmonicOscillatorX2.jl")
-H = identityoperator(Hs) ⊗ Hc + Hs ⊗ identityoperator(Hc) + V
+φ = (1 + √5)/2 
+α = 300
+α = sqrt(α) * exp(im * φ)
+H = identityoperator(Hs) ⊗ Hc + Hs ⊗ identityoperator(Hc) + V/abs(α)^2
 GLOB_EIG_E, GLOB_EIG_V = eigenstates(dense(H))
 
 # Create a new figure
@@ -15,13 +18,13 @@ axs[1].set_ylabel("Energy")
 axs[1].set_title("Energy vs Index")
 axs[1].grid(true)
 
-axs[2].hist(diff(GLOB_EIG_E), bins=1000, edgecolor="black", linewidth=0.5, density=true,)
+axs[2].hist(diff(GLOB_EIG_E), bins=2, edgecolor="black", linewidth=0.5, density=true,)
 axs[2].set_xlabel(L"\Delta E")
 axs[2].set_ylabel(L"d(\Delta E)")
 axs[2].set_title("Normalized Energy Difference Histogram")
 axs[2].set_xlim(0, 1.0)
 axs[2].grid(true)
 
-fig.suptitle("Coupled Harmonic Oscillators with Xs x Xc^2 coupling \n CutOff at N = $N_", fontsize=20)
+fig.suptitle("Coupled Harmonic Oscillators with Xs x (Xc/α)^2 coupling \n CutOff at N = $N_", fontsize=20)
 PyPlot.savefig("data/EnergyDistHist.png")
 close("all")
