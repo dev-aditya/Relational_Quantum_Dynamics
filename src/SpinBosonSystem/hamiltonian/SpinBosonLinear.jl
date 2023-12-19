@@ -1,5 +1,5 @@
 using QuantumOptics
-N_cutoff = 500
+N_cutoff = 1000
 
 # Define the spin-boson Hamiltonian
 spin_basis = SpinBasis(1//2);
@@ -14,4 +14,5 @@ g = sqrt(2)
 g = ħ*g
 Hs = ħ*ω*sigmaz(spin_basis)/2
 Hc = ħ*Ω*(ad*a + identityoperator(clck_basis)/2)
-V = g*(tensor(sigmax(spin_basis), (a + ad)/√2))
+x  = (a + ad)/√2
+V = g*(tensor(sigmax(spin_basis), x))

@@ -7,7 +7,7 @@ using Statistics
 using LaTeXStrings
 PyPlot.plt.style.use("seaborn")
 
-include("hamiltonian/SpinBoson.jl")
+include("hamiltonian/SpinBosonLinear.jl")
 
 quant_system = BosonQuantumSystem(Hs, Hc, V);
 φ = (1 + √5)/2 
