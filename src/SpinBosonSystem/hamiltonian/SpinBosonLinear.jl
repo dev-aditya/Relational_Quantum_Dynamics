@@ -7,8 +7,8 @@ clck_basis = FockBasis(N_cutoff);
 
 a = destroy(clck_basis)
 ad = create(clck_basis)
-ω = 2π*0.1
-g = sqrt(2)
+ω = 2π*1.0
+g = sqrt(10)
 Ω = 2π*2.0
 ħ = 1.0
 g = ħ*g
