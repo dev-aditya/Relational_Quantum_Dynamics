@@ -8,7 +8,61 @@ using PyCall
 using LaTeXStrings
 pyimport("scienceplots")
 mpl = pyimport("matplotlib")
-mpl.style.use(["science"])
+#mpl.style.use(["science"])
+rcParams = pyimport("matplotlib").rcParams
+tex_fonts = Dict(
+    # Use LaTeX to write all text
+    "text.usetex"=> true,
+    "font.family"=> "serif",
+    # Use 10pt font in plots, to match 10pt font in document
+    "axes.labelsize"=> 12,
+    "font.size"=> 12,
+    # Make the legend/label fonts a little smaller
+    "legend.fontsize"=> 8,
+    "xtick.labelsize"=> 8,
+    "ytick.labelsize"=> 8
+)
+for (k, v) in tex_fonts
+    rcParams[k] = v
+end
+function set_size(width, fraction, subplots)
+    """Set figure dimensions to avoid scaling in LaTeX.
+
+    Parameters
+    ----------
+    width: float or string
+            Document width in points, or string of predefined document type
+    fraction: float, optional
+            Fraction of the width which you wish the figure to occupy
+    subplots: array-like, optional
+            The number of rows and columns of subplots.
+    Returns
+    -------
+    fig_dim: tuple
+            Dimensions of figure in inches
+    """
+    if width == "thesis"
+        width_pt = 434.90039
+    else
+        width_pt = width
+    end
+
+    # Width of figure (in pts)
+    fig_width_pt = width_pt * fraction
+    # Convert from pt to inches
+    inches_per_pt = 1 / 72.27
+
+    # Golden ratio to set aesthetic figure height
+    # https://disq.us/p/2940ij3
+    golden_ratio = (5^.5 - 1) / 2
+
+    # Figure width in inches
+    fig_width_in = fig_width_pt * inches_per_pt
+    # Figure height in inches
+    fig_height_in = fig_width_in * golden_ratio * (subplots[1] / subplots[2])
+
+    return (fig_width_in, fig_height_in)
+end
 include("hamiltonian/SpinBosonLinear.jl")
 #[1, 6, 10, 100, 600, 900]
 φ = (1 + √5)/2 
@@ -25,24 +79,29 @@ Ec = real(expect(Hc, χ(0.0)))
 over_mean = Vector{Float64}(undef, length(quant_system.GLOB_EIG_E))
 over_var = Vector{Float64}(undef, length(quant_system.GLOB_EIG_E))
 H_semi(t, ψ) = Hs + g*sigmax(spin_basis)*(sqrt(2)*abs(α)*cos(Ω*t- φ))
-Overlap = Vector{Float64}(undef, length(quant_system.GLOB_EIG_E))
+Sys_energy_RQM = Vector{Float64}(undef, length(quant_system.GLOB_EIG_E))
+Sys_energy_semi = Vector{Float64}(undef, length(quant_system.GLOB_EIG_E))
+Sys_energy_RQM_var = Vector{Float64}(undef, length(quant_system.GLOB_EIG_E))
+Sys_energy_semi_var = Vector{Float64}(undef, length(quant_system.GLOB_EIG_E))
 for index in eachindex(quant_system.GLOB_EIG_E)
     UpdateIndex(quant_system, index)
-    Overlap[index] = real(expect(ptrace(quant_system.GLOB_EIG_V[index], [1]), χ(0.0)))
     local overlap = Vector{ComplexF64}(undef, length(T_))
-    local psi_0 = tensor(identityoperator(Hs), dagger(χ(0.0))) * quant_system.Ψ
+    local psi_0 =(tensor(identityoperator(Hs), dagger(χ(0.0))) * quant_system.Ψ)
     T, psi_semi_t = timeevolution.schroedinger_dynamic(T_, psi_0, H_semi)
     c1_semi = Vector{Float64}(undef, length(T_))
+    c2_semi = Vector{Float64}(undef, length(T_))
     c1_rqm  = Vector{Float64}(undef, length(T)) 
-
+    c2_rqm  = Vector{Float64}(undef, length(T))
     @threads for i in eachindex(T_)
         ψt_ = psi_semi_t[i]
         if abs(norm(ψt_)) == 0
             c1_semi[i] = abs2(ψt_.data[1])
+            c2_semi[i] = abs2(ψt_.data[2])
         else
             ψt_ = normalize(ψt_)
             psi_semi_t[i] = ψt_
             c1_semi[i] = abs2(ψt_.data[1])
+            c2_semi[i] = abs2(ψt_.data[2])
         end
     end
     @threads for i in eachindex(T)
@@ -50,14 +109,22 @@ for index in eachindex(quant_system.GLOB_EIG_E)
         ϕ = tensor(identityoperator(Hs), dagger(Χt)) * quant_system.Ψ
         if abs(norm(ϕ)) == 0
             c1_rqm[i] = abs2(ϕ.data[1])
+            c2_rqm[i] = abs2(ϕ.data[2])
         else
             normalize!(ϕ)
             c1_rqm[i] = abs2(ϕ.data[1])
+            c2_rqm[i] = abs2(ϕ.data[2])
         end
         overlap[i] = abs(dagger(ϕ) * psi_semi_t[i])
     end
     over_mean[index] = mean(overlap)
     over_var[index] = var(overlap)
+    sys_energy_rqm = c1_rqm - c2_rqm
+    sys_energy_semi = c1_semi - c2_semi
+    Sys_energy_RQM[index] = 1/2*ħ*ω*mean(sys_energy_rqm)
+    Sys_energy_semi[index] = 1/2*ħ*ω*mean(sys_energy_semi)
+    Sys_energy_RQM_var[index] = 1/2*ħ*ω*var(sys_energy_rqm)
+    Sys_energy_semi_var[index] = 1/2*ħ*ω*var(sys_energy_semi)
     #=
     entan = real(entanglement_entropy(quant_system.Ψ, [2]))/log(2)
     fig, ax = subplots(2, 1, figsize=(10, 7), sharex=true)
@@ -81,7 +148,7 @@ for index in eachindex(quant_system.GLOB_EIG_E)
     =#
 end
 # Create a new figure
-fig, ax = subplots(1, 2, figsize=(10, 5))
+fig, ax = subplots(1, 2, figsize=set_size("thesis", fraction=1, subplots=(1, 2)))
 
 ax[1].scatter(quant_system.GLOB_EIG_E, over_mean, s=0.1, alpha=0.5)
 ax[1].set_title("SpinBoson with linear potential at \n CutOff N = $N_cutoff")
@@ -99,4 +166,28 @@ ax[2].set_xlabel(L"E_{glob}")
 ax[2].set_ylabel(L"var(|\langle \psi(t)|\psi_{semi}(t)\rangle|)")
 ax[2].grid(true, linestyle=":")
 ax[2].axvline(Ec, color="red", linestyle="--", linewidth=0.5)
-PyPlot.savefig("data/SpinBoson/alpha2=600/Overlap.pdf", dpi=600)
+PyPlot.savefig("data/SpinBoson/alpha2=600/Overlap.pdf", dpi=600, bbox_inches="tight")
+
+fig, ax = subplots(2, 2, figsize=set_size("thesis", fraction=1, subplots=(2, 2)))
+ax[1, 1].scatter(quant_system.GLOB_EIG_E, Sys_energy_RQM, s=0.1, alpha=0.5)
+ax[1, 1].set_xlabel(L"E_{glob}")
+ax[1, 1].set_ylabel(L"\frac{\hbar \omega}{2}\langle E_{sys} \rangle _{RQM}")
+ax[1, 1].grid(true, linestyle=":")
+ax[1, 1].axvline(Ec, color="red", linestyle="--", linewidth=0.5)
+ax[1, 2].scatter(quant_system.GLOB_EIG_E, Sys_energy_semi, s=0.1, alpha=0.5)
+ax[1, 2].set_xlabel(L"E_{glob}")
+ax[1, 2].set_ylabel(L"\frac{\hbar \omega}{2}\mathrm{var}\langle E_{sys} \rangle _{semi}")
+ax[1, 2].grid(true, linestyle=":")
+ax[1, 2].axvline(Ec, color="red", linestyle="--", linewidth=0.5)
+ax[2, 1].scatter(quant_system.GLOB_EIG_E, Sys_energy_RQM_var, s=0.1, alpha=0.5)
+ax[2, 1].set_xlabel(L"E_{glob}")
+ax[2, 1].set_ylabel(L"\frac{\hbar \omega}{2}\langle E_{sys} \rangle _{RQM}")
+ax[2, 1].grid(true, linestyle=":")
+ax[2, 1].axvline(Ec, color="red", linestyle="--", linewidth=0.5)
+ax[2, 2].scatter(quant_system.GLOB_EIG_E, Sys_energy_semi_var, s=0.1, alpha=0.5)
+ax[2, 2].set_xlabel(L"E_{glob}")
+ax[2, 2].set_ylabel(L"\frac{\hbar \omega}{2}\mathrm{var}\langle E_{sys} \rangle _{semi}")
+ax[2, 2].grid(true, linestyle=":")
+ax[2, 2].axvline(Ec, color="red", linestyle="--", linewidth=0.5)
+fig.suptitle("SpinBoson with linear potential at \n CutOff N = $N_cutoff")
+PyPlot.savefig("data/SpinBoson/alpha2=600/SystemEnergy.pdf", dpi=600, bbox_inches="tight")
