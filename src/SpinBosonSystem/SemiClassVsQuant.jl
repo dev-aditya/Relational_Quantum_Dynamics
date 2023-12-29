@@ -1,31 +1,15 @@
 include("FiniteQuantSystem.jl")
 using .FiniteQuantSystem
 using QuantumOptics
-using PyPlot
 using Base.Threads
 using Statistics
 using PyCall
 using LaTeXStrings
+using PyPlot
 pyimport("scienceplots")
 mpl = pyimport("matplotlib")
-#mpl.style.use(["science"])
-rcParams = pyimport("matplotlib").rcParams
-tex_fonts = Dict(
-    # Use LaTeX to write all text
-    "text.usetex"=> true,
-    "font.family"=> "serif",
-    # Use 10pt font in plots, to match 10pt font in document
-    "axes.labelsize"=> 12,
-    "font.size"=> 12,
-    # Make the legend/label fonts a little smaller
-    "legend.fontsize"=> 8,
-    "xtick.labelsize"=> 8,
-    "ytick.labelsize"=> 8
-)
-for (k, v) in tex_fonts
-    rcParams[k] = v
-end
-function set_size(width, fraction, subplots)
+mpl.style.use(["science"])
+function set_size(width, fraction::Int64, subplots::Tuple)
     """Set figure dimensions to avoid scaling in LaTeX.
 
     Parameters
@@ -63,7 +47,7 @@ function set_size(width, fraction, subplots)
 
     return (fig_width_in, fig_height_in)
 end
-include("hamiltonian/SpinBosonLinear.jl")
+include("hamiltonian/SpinBosonQuad.jl")
 #[1, 6, 10, 100, 600, 900]
 φ = (1 + √5)/2 
 α = 600
@@ -78,7 +62,7 @@ Ec = real(expect(Hc, χ(0.0)))
 ## Semiclassical Hamiltonian for quant_system
 over_mean = Vector{Float64}(undef, length(quant_system.GLOB_EIG_E))
 over_var = Vector{Float64}(undef, length(quant_system.GLOB_EIG_E))
-H_semi(t, ψ) = Hs + g*sigmax(spin_basis)*(sqrt(2)*abs(α)*cos(Ω*t- φ))
+H_semi(t, ψ) = Hs + g*sigmax(spin_basis)*(sqrt(2)*abs(α)*cos(Ω*t- φ))^2
 Sys_energy_RQM = Vector{Float64}(undef, length(quant_system.GLOB_EIG_E))
 Sys_energy_semi = Vector{Float64}(undef, length(quant_system.GLOB_EIG_E))
 Sys_energy_RQM_var = Vector{Float64}(undef, length(quant_system.GLOB_EIG_E))
@@ -148,46 +132,52 @@ for index in eachindex(quant_system.GLOB_EIG_E)
     =#
 end
 # Create a new figure
-fig, ax = subplots(1, 2, figsize=set_size("thesis", fraction=1, subplots=(1, 2)))
+fig, ax = subplots(1, 2, figsize=set_size("thesis", 1, (1, 2)),)
 
 ax[1].scatter(quant_system.GLOB_EIG_E, over_mean, s=0.1, alpha=0.5)
-ax[1].set_title("SpinBoson with linear potential at \n CutOff N = $N_cutoff")
-ax[1].set_xlabel(L"E_{glob}")
-ax[1].set_ylabel(L"mean(|\langle \psi(t)|\psi_{semi}(t)\rangle|)")
+ax[1].set_xlabel(L"E_{glob}", fontsize=8)
+ax[1].set_ylabel(L"mean(|\langle \psi(t)|\psi_{semi}(t)\rangle|)", fontsize=8)
 ax[1].set_ylim(0.5, 1)
 ax[1].grid(true, linestyle=":")
 ax[1].axvline(Ec, color="red", linestyle="--", linewidth=0.5)
 ax[1].axvline(Ec + 2500.0, color="green", linestyle="--", linewidth=0.5)
 ax[1].axvline(Ec - 2500.0, color="green", linestyle="--", linewidth=0.5)
-
+ax[1].tick_params(axis="both", which="major", labelsize=8)
 ax[2].scatter(quant_system.GLOB_EIG_E, over_var, s=0.1, alpha=0.5)
-ax[2].set_title("Variance of Overlap for linear Coupling at \n CutOff N = $N_cutoff")
-ax[2].set_xlabel(L"E_{glob}")
-ax[2].set_ylabel(L"var(|\langle \psi(t)|\psi_{semi}(t)\rangle|)")
+ax[2].set_xlabel(L"E_{glob}", fontsize=8)
+ax[2].set_ylabel(L"var(|\langle \psi(t)|\psi_{semi}(t)\rangle|)", fontsize=8)
 ax[2].grid(true, linestyle=":")
 ax[2].axvline(Ec, color="red", linestyle="--", linewidth=0.5)
+ax[2].tick_params(axis="both", which="major", labelsize=8)
+fig.subplots_adjust(hspace=0.2, wspace=0.2)
+fig.suptitle("SpinBoson with linear potential at  CutOff N = $N_cutoff", fontsize=10)
 PyPlot.savefig("data/SpinBoson/alpha2=600/Overlap.pdf", dpi=600, bbox_inches="tight")
 
-fig, ax = subplots(2, 2, figsize=set_size("thesis", fraction=1, subplots=(2, 2)))
+fig, ax = subplots(2, 2, figsize=set_size("thesis", 1, (2, 2)),)
 ax[1, 1].scatter(quant_system.GLOB_EIG_E, Sys_energy_RQM, s=0.1, alpha=0.5)
-ax[1, 1].set_xlabel(L"E_{glob}")
-ax[1, 1].set_ylabel(L"\frac{\hbar \omega}{2}\langle E_{sys} \rangle _{RQM}")
+ax[1, 1].set_xlabel(L"E_{glob}", fontsize=8)
+ax[1, 1].set_ylabel(L"\frac{\hbar \omega}{2}\langle E_{sys} \rangle _{RQM}", fontsize=8)
 ax[1, 1].grid(true, linestyle=":")
 ax[1, 1].axvline(Ec, color="red", linestyle="--", linewidth=0.5)
+ax[1, 1].tick_params(axis="both", which="major", labelsize=8)
 ax[1, 2].scatter(quant_system.GLOB_EIG_E, Sys_energy_semi, s=0.1, alpha=0.5)
-ax[1, 2].set_xlabel(L"E_{glob}")
-ax[1, 2].set_ylabel(L"\frac{\hbar \omega}{2}\mathrm{var}\langle E_{sys} \rangle _{semi}")
+ax[1, 2].set_xlabel(L"E_{glob}", fontsize=8)
+ax[1, 2].set_ylabel(L"\frac{\hbar \omega}{2}\mathrm{var}\langle E_{sys} \rangle _{semi}", fontsize=8)
 ax[1, 2].grid(true, linestyle=":")
 ax[1, 2].axvline(Ec, color="red", linestyle="--", linewidth=0.5)
+ax[1, 2].tick_params(axis="both", which="major", labelsize=8)
 ax[2, 1].scatter(quant_system.GLOB_EIG_E, Sys_energy_RQM_var, s=0.1, alpha=0.5)
 ax[2, 1].set_xlabel(L"E_{glob}")
-ax[2, 1].set_ylabel(L"\frac{\hbar \omega}{2}\langle E_{sys} \rangle _{RQM}")
+ax[2, 1].set_ylabel(L"\frac{\hbar \omega}{2}\langle E_{sys} \rangle _{RQM}", fontsize=8)
 ax[2, 1].grid(true, linestyle=":")
 ax[2, 1].axvline(Ec, color="red", linestyle="--", linewidth=0.5)
+ax[2, 1].tick_params(axis="both", which="major", labelsize=8)
 ax[2, 2].scatter(quant_system.GLOB_EIG_E, Sys_energy_semi_var, s=0.1, alpha=0.5)
-ax[2, 2].set_xlabel(L"E_{glob}")
-ax[2, 2].set_ylabel(L"\frac{\hbar \omega}{2}\mathrm{var}\langle E_{sys} \rangle _{semi}")
+ax[2, 2].set_xlabel(L"E_{glob}", fontsize=8)
+ax[2, 2].set_ylabel(L"\frac{\hbar \omega}{2}\mathrm{var}\langle E_{sys} \rangle _{semi}", fontsize=8)
 ax[2, 2].grid(true, linestyle=":")
 ax[2, 2].axvline(Ec, color="red", linestyle="--", linewidth=0.5)
-fig.suptitle("SpinBoson with linear potential at \n CutOff N = $N_cutoff")
+ax[2, 2].tick_params(axis="both", which="major", labelsize=8)
+fig.suptitle("SpinBoson with linear potential at  CutOff N = $N_cutoff", fontsize=10)
+fig.subplots_adjust(hspace=0.2, wspace=0.2)
 PyPlot.savefig("data/SpinBoson/alpha2=600/SystemEnergy.pdf", dpi=600, bbox_inches="tight")
