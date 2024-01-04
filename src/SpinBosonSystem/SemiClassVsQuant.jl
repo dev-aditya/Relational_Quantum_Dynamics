@@ -47,30 +47,31 @@ function set_size(width, fraction::Int64, subplots::Tuple)
 
     return (fig_width_in, fig_height_in)
 end
-include("hamiltonian/SpinBosonQuad.jl")
+include("hamiltonian/SpinBosonLinear.jl")
 #[1, 6, 10, 100, 600, 900]
 φ = (1 + √5)/2 
-α = 600
+α = 400
 α = sqrt(α) * exp(im * φ)
 quant_system = BosonQuantumSystem(Hs, Hc, V);
 function χ(t::Float64)
     #return quant_system.HC_EIG_V[100] * exp(-im * quant_system.HC_EIG_E[100] * t)
     return coherentstate(clck_basis, exp(-im * Ω * t)*α)
 end
-T_ = LinRange(0, 1, 2000)
+T_ = LinRange(0, 2π, 1000)
 Ec = real(expect(Hc, χ(0.0)))
 ## Semiclassical Hamiltonian for quant_system
 over_mean = Vector{Float64}(undef, length(quant_system.GLOB_EIG_E))
 over_var = Vector{Float64}(undef, length(quant_system.GLOB_EIG_E))
-H_semi(t, ψ) = Hs + g*sigmax(spin_basis)*(sqrt(2)*abs(α)*cos(Ω*t- φ))^2
+H_semi(t, ψ) = Hs + g*sigmax(spin_basis)*(sqrt(2)*abs(α)*cos(Ω*t- φ))
 Sys_energy_RQM = Vector{Float64}(undef, length(quant_system.GLOB_EIG_E))
 Sys_energy_semi = Vector{Float64}(undef, length(quant_system.GLOB_EIG_E))
 Sys_energy_RQM_var = Vector{Float64}(undef, length(quant_system.GLOB_EIG_E))
 Sys_energy_semi_var = Vector{Float64}(undef, length(quant_system.GLOB_EIG_E))
 for index in eachindex(quant_system.GLOB_EIG_E)
-    UpdateIndex(quant_system, index)
+    println("index = $index")
+    local Ψ = quant_system.GLOB_EIG_V[index]
     local overlap = Vector{ComplexF64}(undef, length(T_))
-    local psi_0 =(tensor(identityoperator(Hs), dagger(χ(0.0))) * quant_system.Ψ)
+    local psi_0 = normalize!(tensor(identityoperator(Hs), dagger(χ(0.0))) * Ψ)
     T, psi_semi_t = timeevolution.schroedinger_dynamic(T_, psi_0, H_semi)
     c1_semi = Vector{Float64}(undef, length(T_))
     c2_semi = Vector{Float64}(undef, length(T_))
@@ -89,8 +90,8 @@ for index in eachindex(quant_system.GLOB_EIG_E)
         end
     end
     @threads for i in eachindex(T)
-        Χt = χ(T[i])
-        ϕ = tensor(identityoperator(Hs), dagger(Χt)) * quant_system.Ψ
+        cond_proj_t = tensor(one(Hs), χ(T[i]))
+        ϕ =  dagger(cond_proj_t) * Ψ
         if abs(norm(ϕ)) == 0
             c1_rqm[i] = abs2(ϕ.data[1])
             c2_rqm[i] = abs2(ϕ.data[2])
@@ -109,8 +110,7 @@ for index in eachindex(quant_system.GLOB_EIG_E)
     Sys_energy_semi[index] = 1/2*ħ*ω*mean(sys_energy_semi)
     Sys_energy_RQM_var[index] = 1/2*ħ*ω*var(sys_energy_rqm)
     Sys_energy_semi_var[index] = 1/2*ħ*ω*var(sys_energy_semi)
-    #=
-    entan = real(entanglement_entropy(quant_system.Ψ, [2]))/log(2)
+    entan = real(entanglement_entropy(Ψ, [2]))/log(2)
     fig, ax = subplots(2, 1, figsize=(10, 7), sharex=true)
     fig.subplots_adjust(hspace=0.5)
     ax[1].plot(T, c1_semi, label=L"|c_1({semi})|^2", linestyle="--",alpha=0.4, linewidth=0.5)
@@ -125,14 +125,13 @@ for index in eachindex(quant_system.GLOB_EIG_E)
     ax[2].set_title("Overlap")
     ax[1].grid(true, linestyle=":")
     ax[2].grid(true, linestyle=":")
-    fig.suptitle("SpinBoson with linear coupling at CutOff N = $N_cutoff" 
+    fig.suptitle("SpinBoson with Quad coupling at CutOff N = $N_cutoff" 
         * "\n S = $(round(entan, digits=3)) E = $(round(quant_system.GLOB_EIG_E[index], digits=4)) Ec = $(round(Ec, digits=4))")
     savefig("data/SpinBoson/alpha2=600/QuantVsClass/index_$(index).png")
     close(fig)
-    =#
 end
 # Create a new figure
-fig, ax = subplots(1, 2, figsize=set_size("thesis", 1, (1, 2)),)
+fig, ax = subplots(1, 2, figsize=set_size("thesis", 2, (1, 2)),)
 
 ax[1].scatter(quant_system.GLOB_EIG_E, over_mean, s=0.1, alpha=0.5)
 ax[1].set_xlabel(L"E_{glob}", fontsize=8)
@@ -150,10 +149,10 @@ ax[2].grid(true, linestyle=":")
 ax[2].axvline(Ec, color="red", linestyle="--", linewidth=0.5)
 ax[2].tick_params(axis="both", which="major", labelsize=8)
 fig.subplots_adjust(hspace=0.2, wspace=0.2)
-fig.suptitle("SpinBoson with linear potential at  CutOff N = $N_cutoff", fontsize=10)
+fig.suptitle("SpinBoson with Quad potential at  CutOff N = $N_cutoff", fontsize=10)
 PyPlot.savefig("data/SpinBoson/alpha2=600/Overlap.pdf", dpi=600, bbox_inches="tight")
 
-fig, ax = subplots(2, 2, figsize=set_size("thesis", 1, (2, 2)),)
+fig, ax = subplots(2, 2, figsize=set_size("thesis", 2, (2, 2)),)
 ax[1, 1].scatter(quant_system.GLOB_EIG_E, Sys_energy_RQM, s=0.1, alpha=0.5)
 ax[1, 1].set_xlabel(L"E_{glob}", fontsize=8)
 ax[1, 1].set_ylabel(L"\frac{\hbar \omega}{2}\langle E_{sys} \rangle _{RQM}", fontsize=8)
@@ -162,13 +161,13 @@ ax[1, 1].axvline(Ec, color="red", linestyle="--", linewidth=0.5)
 ax[1, 1].tick_params(axis="both", which="major", labelsize=8)
 ax[1, 2].scatter(quant_system.GLOB_EIG_E, Sys_energy_semi, s=0.1, alpha=0.5)
 ax[1, 2].set_xlabel(L"E_{glob}", fontsize=8)
-ax[1, 2].set_ylabel(L"\frac{\hbar \omega}{2}\mathrm{var}\langle E_{sys} \rangle _{semi}", fontsize=8)
+ax[1, 2].set_ylabel(L"\frac{\hbar \omega}{2}\langle E_{sys} \rangle _{semi}", fontsize=8)
 ax[1, 2].grid(true, linestyle=":")
 ax[1, 2].axvline(Ec, color="red", linestyle="--", linewidth=0.5)
 ax[1, 2].tick_params(axis="both", which="major", labelsize=8)
 ax[2, 1].scatter(quant_system.GLOB_EIG_E, Sys_energy_RQM_var, s=0.1, alpha=0.5)
 ax[2, 1].set_xlabel(L"E_{glob}")
-ax[2, 1].set_ylabel(L"\frac{\hbar \omega}{2}\langle E_{sys} \rangle _{RQM}", fontsize=8)
+ax[2, 1].set_ylabel(L"\frac{\hbar \omega}{2}\mathrm{var}\langle E_{sys} \rangle _{RQM}", fontsize=8)
 ax[2, 1].grid(true, linestyle=":")
 ax[2, 1].axvline(Ec, color="red", linestyle="--", linewidth=0.5)
 ax[2, 1].tick_params(axis="both", which="major", labelsize=8)
@@ -178,6 +177,6 @@ ax[2, 2].set_ylabel(L"\frac{\hbar \omega}{2}\mathrm{var}\langle E_{sys} \rangle 
 ax[2, 2].grid(true, linestyle=":")
 ax[2, 2].axvline(Ec, color="red", linestyle="--", linewidth=0.5)
 ax[2, 2].tick_params(axis="both", which="major", labelsize=8)
-fig.suptitle("SpinBoson with linear potential at  CutOff N = $N_cutoff", fontsize=10)
+fig.suptitle("SpinBoson with Quad potential at  CutOff N = $N_cutoff", fontsize=10)
 fig.subplots_adjust(hspace=0.2, wspace=0.2)
 PyPlot.savefig("data/SpinBoson/alpha2=600/SystemEnergy.pdf", dpi=600, bbox_inches="tight")
