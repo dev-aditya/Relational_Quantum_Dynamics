@@ -48,7 +48,7 @@ function set_size(width, fraction::Int64, subplots::Tuple)
 
     return (fig_width_in, fig_height_in)
 end
-include("hamiltonian/GravitationalInteraction.jl")
+include("hamiltonian/JyaCumModel.jl")
 #[1, 6, 10, 100, 600, 900]
 φ = (1 + √5)/2 
 α = 400
@@ -56,12 +56,12 @@ include("hamiltonian/GravitationalInteraction.jl")
 quant_system = BosonQuantumSystem(Hs, Hc, V);
 function χ(t::Float64)
     #return quant_system.HC_EIG_V[100] * exp(-im * quant_system.HC_EIG_E[100] * t)
-    return coherentstate(clck_basis, exp(-im * Ω * t)*α)
+    return coherentstate(clck_basis, exp(-im * ω0 * t)*α)
 end
 T_ = LinRange(0, 3π, 3000)
 Ec = real(expect(Hc, χ(0.0)))
 ## Semiclassical Hamiltonian for quant_system
-H_semi(t, ψ) = Hs + g*sigmax(spin_basis)*(sqrt(2)*abs(α)*cos(Ω*t- φ))
+H_semi(t, ψ) = Hs + ħ*g*(((α*exp(-im * ω0 * t))*sigmap(spin_basis)) + conj((α*exp(-im * ω0 * t)))*(sigmam(spin_basis)))
 E_semi_mean  = Vector{Float64}(undef, length(quant_system.GLOB_EIG_E))
 E_semi_var   = Vector{Float64}(undef, length(quant_system.GLOB_EIG_E))
 E_rqm_mean   = Vector{Float64}(undef, length(quant_system.GLOB_EIG_E))
@@ -106,8 +106,8 @@ for index in eachindex(quant_system.GLOB_EIG_E)
     E_rqm_var[index] = var(E_RQM)
     over_mean[index] = mean(overlap)
     over_var[index] = var(overlap)
-    save("data/SpinBoson/gravity/Potential/E_semi_$index.jld", "data", E_semi)
-    save("data/SpinBoson/gravity/Potential/E_RQM_$index.jld", "data", E_RQM)
+    #save("data/SpinBoson/gravity/Potential/E_semi_$index.jld", "data", E_semi)
+    #save("data/SpinBoson/gravity/Potential/E_RQM_$index.jld", "data", E_RQM)
 end
 
 fig, ax = subplots(3, 2, figsize=set_size("thesis", 2, (3, 2)),)
@@ -149,5 +149,5 @@ ax[3, 2].axvline(Ec, color="red", linestyle="--", linewidth=0.5)
 ax[3, 2].tick_params(axis="both", which="major", labelsize=8)
 fig.suptitle("SpinBoson with Linear potential  at  CutOff N = $N_cutoff", fontsize=10)
 fig.subplots_adjust(hspace=0.2, wspace=0.2)
-PyPlot.savefig("data/SpinBoson/gravity/Allplots.pdf", dpi=600, bbox_inches="tight")
+PyPlot.savefig("data/LZsys/Allplots.pdf", dpi=600, bbox_inches="tight")
 close(fig)
