@@ -7,7 +7,7 @@ clck_basis = FockBasis(N_cutoff);
 
 a = destroy(clck_basis)
 ad = create(clck_basis)
-ω0 = 2π*1.0
+ω0 = 2π*1.1
 ħ = 1.0
 Hs = ħ*ω0*sigmaz(spin_basis)/2
 Hc = ħ*ω0*(ad*a)

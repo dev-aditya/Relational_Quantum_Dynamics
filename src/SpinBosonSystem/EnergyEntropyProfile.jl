@@ -4,11 +4,21 @@ using PyCall
 using LaTeXStrings
 pyimport("scienceplots")
 mpl = pyimport("matplotlib")
-mpl.style.use(["science"])
+mpl.style.use(["science", "no-latex"])
+using DelimitedFiles
+hamiltonian = "JyaCumModel"
+include("hamiltonian/$hamiltonian.jl")
 
-α = sqrt.([1])
-include("hamiltonian/SpinBosonLinear.jl")
-for i in eachindex(α)
+if isdir("data/SpinBoson/$hamiltonian/entropy") == false
+    mkdir("data/SpinBoson/$hamiltonian/entropy")
+end
+
+α_values = [50, 300, 700]
+for i in eachindex(α_values)
+    φ = (1 + √5)/2 
+    α = sqrt(α_values[i]) * exp(im * φ)
+    g = 2π*0.01
+    V = ħ*g*((sigmap(spin_basis)⊗a) + (sigmam(spin_basis)⊗ad)) / abs(α)
     H = identityoperator(Hs) ⊗ Hc + Hs ⊗ identityoperator(Hc) + V
     GLOB_EIG_E, GLOB_EIG_V = eigenstates(dense(H))
     function Entropy(Ψ::Ket)
@@ -16,19 +26,23 @@ for i in eachindex(α)
     end
 
     ent = Entropy.(GLOB_EIG_V)
-
-    # Create a new figure
-    figure(figsize=(6, 8))
-
-    # Plot the 2D histogram
-    hist2D(GLOB_EIG_E, ent, bins=(300, 300), cmap="plasma", cmin=1)
-    colorbar(orientation="horizontal")
-    # Set labels and title
-    xlabel("Energy")
-    ylabel("Entropy")
-    grid(true, linestyle=":")
-    title("SpinBoson with linear coupling  at \n CutOff N = $N_cutoff"  * L"\alpha ^2" *"= $(abs(α[i])^2)")
-    PyPlot.savefig("data/SpinBoson/EnergyVsEntropyHist_alpha2=$(abs(α[i])^2).png", dpi=300)
-    println("done")
-    close("all")
+    data_mat = [GLOB_EIG_E ent]
+    writedlm("data/SpinBoson/$hamiltonian/entropy/entropy_alpha_$(α_values[i]).dat", data_mat)
+    println("α = $(α_values[i]) done")
 end
+
+fig, axs = subplots(length(α_values), 1, figsize=(8, 6*length(α_values)), sharex=true, sharey=true)
+
+for i in eachindex(α_values)
+    α = α_values[i]
+    data = readdlm("data/SpinBoson/$hamiltonian/entropy/entropy_alpha_$(α).dat")
+    energy = data[:, 1]
+    entropy = data[:, 2]
+    axs[i].hist2d(energy, entropy, bins=50, cmap="viridis")
+    axs[i].set_title("Alpha = $(α)")
+    axs[i].set_xlabel("Energy")
+    axs[i].set_ylabel("Entropy")
+end
+
+tight_layout()
+savefig("data/SpinBoson/$hamiltonian/entropy/entropy_profile.pdf")
