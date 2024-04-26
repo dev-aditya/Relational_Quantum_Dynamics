@@ -1,3 +1,3 @@
 # Relational_Time_Julia
 
-The relational quantum dynamics approach implemented in Julia.
+The Page and Wootters Relational quantum dynamics approach has been implemented in the Julia.
